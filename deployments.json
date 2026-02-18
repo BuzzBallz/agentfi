@@ -1,0 +1,11 @@
+{
+  "16600": {
+    "chainName": "0G Testnet",
+    "AgentNFT": "",
+    "AgentMarketplace": ""
+  },
+  "0": {
+    "chainName": "ADI Testnet",
+    "AgentPayment": ""
+  }
+}

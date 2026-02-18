@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+openai
+hedera-agent-kit
+python-dotenv
+pydantic
+httpx
+mypy
