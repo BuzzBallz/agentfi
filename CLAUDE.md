@@ -71,3 +71,14 @@ Always keep a working fallback for each chain interaction.
 | 0G Best iNFT (ERC-7857)     | $7,000   | 0G Chain  |
 | ETHDenver FUTURLLAMA        | $2,000   | Multi     |
 | **TOTAL**                   |**$45,000**|          |
+
+## Payment Provider Architecture
+The orchestrator supports pluggable payment providers via BasePaymentProvider.
+Currently active: MockPaymentProvider (logs only, no real transactions).
+
+To activate x402 (Kite AI) when ready:
+1. Implement agents/payments/x402_provider.py
+2. Install the Kite SDK
+3. Set KITE_API_KEY + KITE_AGENT_PASSPORT_ID in .env
+4. Swap MockPaymentProvider → X402PaymentProvider in agents/api.py
+5. No other file needs to change.

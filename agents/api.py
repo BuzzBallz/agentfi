@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -8,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from agents.orchestrator import AGENT_REGISTRY, AgentOrchestrator
+from agents.payments.mock_provider import MockPaymentProvider
 
 load_dotenv()
 
@@ -73,9 +76,26 @@ async def execute_single(agent_id: str, body: ExecuteRequest) -> AgentResponse:
 
 @app.post("/orchestrate")
 async def orchestrate(body: ExecuteRequest) -> AgentResponse:
-    orchestrator = AgentOrchestrator()
+    # Payment provider is resolved here.
+    # To switch to x402: instantiate X402PaymentProvider() instead.
+    orchestrator = AgentOrchestrator(payment_provider=MockPaymentProvider())
     result = await orchestrator.execute(body.query)
     return AgentResponse(success=True, data=result, error=None)
+
+
+@app.get("/payments/status")
+async def payment_status() -> AgentResponse:
+    provider = MockPaymentProvider()
+    available = await provider.is_available()
+    return AgentResponse(
+        success=True,
+        data={
+            "provider": provider.name,
+            "currency": provider.currency,
+            "available": available,
+        },
+        error=None,
+    )
 
 
 if __name__ == "__main__":

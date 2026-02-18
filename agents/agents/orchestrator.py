@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import logging
 from typing import Any
@@ -5,6 +7,8 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from agents.base_agent import BaseAgent
+from agents.payments.base_payment import BasePaymentProvider
+from agents.payments.mock_provider import MockPaymentProvider
 from agents.portfolio_analyzer import PortfolioAnalyzerAgent
 from agents.yield_optimizer import YieldOptimizerAgent
 from agents.risk_scorer import RiskScorerAgent
@@ -38,8 +42,9 @@ Return ONLY valid JSON, no markdown, no explanation:
 
 
 class AgentOrchestrator:
-    def __init__(self) -> None:
+    def __init__(self, payment_provider: BasePaymentProvider | None = None) -> None:
         self.client = AsyncOpenAI()
+        self.payment_provider = payment_provider or MockPaymentProvider()
 
     async def _plan(self, query: str) -> list[dict[str, Any]]:
         response = await self.client.chat.completions.create(
@@ -72,6 +77,19 @@ class AgentOrchestrator:
 
             logger.info("[orchestrator] step %d: %s", i, agent_name)
             result = await agent.execute(agent_input)
+
+            # Optional payment — non-blocking, never crashes the flow
+            try:
+                if self.payment_provider:
+                    await self.payment_provider.charge(
+                        from_address="user",  # TODO: pass real wallet address
+                        to_address=f"agent.{agent_name}",
+                        amount=agent.price_per_call,
+                        metadata={"step": i, "agent": agent_name, "query": agent_input[:100]},
+                    )
+            except Exception as pay_err:
+                logger.warning("[orchestrator] payment failed (non-blocking): %s", pay_err)
+
             outputs.append(result)
 
         return outputs[-1] if outputs else "No result produced."
