@@ -32,6 +32,62 @@ AI agents are increasingly capable but lack economic infrastructure to interact 
 
 ---
 
+## Sponsor Requirements & Judging Criteria
+
+### ADI Foundation ($19,000) — What the judges want
+
+ADI Chain is a ZKsync-based EVM L2 with native compliance (FATF Travel Rule + ADGM), modular L3 domains, and zero-knowledge proofs finalized on Ethereum L1. The $ADI token is the native gas token.
+
+**What ADI judges are looking for:**
+- Real-world use case aligned with their mission: payments, cross-border remittances, digital identity, RWA tokenization
+- Active use of compliance features — not just "deployed on ADI" but leveraging the compliance layer
+- Institutional angle — frame for governments, enterprises, and emerging markets (MENA / Asia / Africa)
+- Connection to "1 billion people onchain by 2030" mission
+- Use $ADI token for value exchange, not just as gas
+
+**AgentFi angle for ADI:** "Compliant cross-border payment infrastructure for AI agents — enabling the agent economy to operate in regulated emerging markets on ADI Chain."
+
+**Critical technical links:**
+- Testnet: https://docs.adi.foundation/how-to-start/adi-network-testnet-details
+- Quickstart: https://docs.adi.foundation/how-to-start/adi-network-testnet-quickstart
+- Explorer: https://docs.adi.foundation/how-to-start/block-explorer
+- ERC-4337 Account Abstraction: natively supported — key for Paymaster bounty
+
+---
+
+### Hedera ($10,000) — What the judges want
+
+Hedera wants an agent-native application where autonomous agents transact, coordinate, and exchange value — positioning Hedera as foundational infrastructure for the Agentic Society.
+
+**Hard technical requirements:**
+- Use HTS (Hedera Token Service) for value exchange between agents
+- Use on-chain attestations for agent identity and trust
+- Agents must be reachable via HCS-10, A2A, XMTP, or MCP protocol
+- Register agents via HOL Standards SDK or Hashnet MCP Server
+- Users must interact with agents via natural language
+
+**Bonus points:** implement UCP (Universal Commerce Protocol) for standardized agent-to-agent commerce.
+
+**Mandatory submission items:**
+- Demo video uploaded to YouTube (submission rejected without it)
+- Pitch deck PDF: team intro + project summary + roadmap + demo link
+
+**AgentFi angle for Hedera:** "AgentFi is the marketplace for OpenClaw agents — each agent is registered on Hedera via HOL SDK, reachable via HCS-10, and earns HTS tokens autonomously for every service it renders."
+
+---
+
+### 0G Labs — iNFT ($7,000) & DeFAI ($7,000) — What the judges want
+
+**iNFT (ERC-7857):** The transfer of the NFT must meaningfully transfer the AI agent. The token must encapsulate: AI model reference (IPFS hash), encrypted system prompt, and capabilities. Judges will check that "intelligence travels with the token."
+
+**DeFAI:** AI must make real financial decisions — not just display data. Ideally use 0G Compute for decentralized AI inference. Show that AI creates measurable DeFi value.
+
+**AgentFi angle for iNFT:** "Transfer an iNFT = transfer a live AI agent. The new owner immediately gains access to the agent's capabilities, earning potential, and execution rights."
+
+**AgentFi angle for DeFAI:** "Three specialized AI agents chain together via our composable orchestrator to produce multi-step DeFi intelligence: portfolio analysis → risk scoring → yield optimization — all on 0G Chain."
+
+---
+
 ## User Stories
 
 ### As a user (agent buyer)
@@ -418,25 +474,45 @@ AGENT_REGISTRY["my_agent"] = MyAgent()
 ## Submission Narrative Per Bounty
 
 ### ADI Open Project ($19,000)
-**Angle:** "Cross-Border Payment Infrastructure for Autonomous AI Agents"
-Focus on: compliance-native payments, whitelist KYC layer, cross-border settlement,
-ADI Chain as the financial rail for the agent economy.
+**Angle:** "Compliant Cross-Border Payment Infrastructure for Autonomous AI Agents"
+- Frame AgentFi as THE payment layer for AI agents operating in regulated emerging markets (MENA, Asia, Africa)
+- Emphasize AgentPayment.sol's compliance whitelist as a mirror of ADI's native FATF Travel Rule enforcement
+- Highlight $ADI token as the settlement currency for every agent hire — not just gas, but the economic unit of the agent marketplace
+- Connect to ADI's "1 billion people onchain" mission: AI agents as financial service providers reaching unbanked populations
+- Mention ERC-4337 Account Abstraction readiness for gasless agent transactions (Paymaster pattern)
+- Key phrase for judges: "We built the infrastructure for AI agents to transact compliantly across borders on ADI Chain"
 
 ### Hedera Killer App ($10,000)
-**Angle:** "AgentFi — The Killer App for the Agentic Society on Hedera"
-Focus on: Hedera Agent Kit for orchestration, HCS for agent messaging,
-OpenClaw framework integration, vision of autonomous agent society.
+**Angle:** "AgentFi — The Marketplace and Economic Layer for the Agentic Society"
+- Frame AgentFi as the killer app where OpenClaw agents autonomously transact, coordinate, and exchange value
+- Demonstrate HTS (Hedera Token Service) integration: agents earn HTS tokens for every service rendered
+- Show agent registration via HOL Standards SDK — each agent is discoverable in the Hedera ecosystem
+- Prove agents are reachable via HCS-10 protocol for agent-to-agent communication
+- Include natural language interface: users chat with agents to request services
+- Highlight the composable orchestrator as autonomous agent-to-agent commerce (portfolio_analyzer pays risk_scorer pays yield_optimizer)
+- MANDATORY: demo video on YouTube + pitch deck PDF with team intro, project summary, roadmap
+- Bonus: reference UCP (Universal Commerce Protocol) alignment for standardized agent commerce
 
 ### 0G Best DeFAI ($7,000)
-**Angle:** "AI-Powered Composable DeFi Agents on 0G Chain"
-Focus on: composable orchestrator enabling multi-step DeFi analysis,
-yield_optimizer chained with risk_scorer, AI-driven financial decisions on 0G.
+**Angle:** "AI Agents Making Real DeFi Decisions via Composable Orchestration on 0G"
+- Emphasize that AI is making actual financial decisions, not just displaying data
+- Show the orchestrator chaining agents: portfolio analysis → risk scoring → yield optimization in a single query
+- Each agent uses GPT-4o-mini to produce actionable DeFi recommendations with specific APY targets
+- Frame the composable orchestrator as a DeFi-native AI reasoning engine
+- Mention 0G Compute readiness for future decentralized AI inference
+- Key phrase for judges: "Three AI agents chain together to produce multi-step DeFi intelligence — all on 0G Chain"
 
 ### 0G Best iNFT ($7,000)
-**Angle:** "Transferable AI Agents as iNFTs (ERC-7857)"
-Focus on: each agent is a self-contained iNFT, model hash on IPFS,
-transfer = full ownership transfer of the AI agent.
+**Angle:** "Transfer an iNFT = Transfer a Live AI Agent"
+- Emphasize ERC-7857 compliance: each token encapsulates modelHash (IPFS CID), encrypted systemPrompt, capabilities JSON, and pricePerCall
+- Demonstrate that transferring the iNFT meaningfully transfers the AI agent — the new owner can immediately use, rent, or resell the agent
+- Show that "intelligence travels with the token" — the iNFT is not a JPEG, it is a self-contained autonomous agent
+- Highlight the marketplace flow: mint agent → list on marketplace → hire generates revenue → transfer ownership = transfer earning potential
+- Key phrase for judges: "The iNFT IS the agent — transfer ownership, transfer intelligence"
 
 ### ETHDenver FUTURLLAMA ($2,000)
-**Angle:** "AI + DePIN: The Future of Autonomous Agent Economies"
-Focus on: frontier vision, composable AI agents as economic actors, multi-chain infrastructure.
+**Angle:** "The Banking System for Autonomous AI Agents — Multi-Chain Agent Economy"
+- Position AgentFi at the frontier of AI + crypto convergence
+- Highlight the multi-chain architecture: 0G for agent identity (iNFT), ADI for compliant payments, Hedera for orchestration
+- Emphasize composable AI agents as the next economic primitive — agents that earn, transact, and get hired autonomously
+- Frame the pluggable payment architecture (BasePaymentProvider → x402 ready) as forward-looking infrastructure for the agent economy
