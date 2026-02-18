@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useAccount, useConnect, useDisconnect } from "wagmi"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import GlitchText from "./GlitchText"
 
 function shortenAddress(address: string): string {
   return `${address.slice(0, 4)}****${address.slice(-4)}`
@@ -65,8 +66,11 @@ export default function WalletConnect() {
       <Button
         variant="ghost"
         onClick={() => setShowModal(true)}
+        className="relative overflow-visible"
       >
-        Connect Wallet
+        <GlitchText speed={0.4} enableOnHover={true}>
+          Connect Wallet
+        </GlitchText>
       </Button>
 
       {/* Modal overlay */}
