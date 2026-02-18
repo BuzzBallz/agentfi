@@ -1,5 +1,8 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Space_Mono, DM_Sans } from "next/font/google";
+
+const LogoCarousel = dynamic(() => import("@/components/LogoCarousel"), { ssr: false });
 
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
 const dmSans = DM_Sans({ subsets: ["latin"] });
@@ -378,18 +381,21 @@ export default function HomePage() {
         </section>
 
         {/* ── Section 4: Chain Architecture ── */}
-        <section className="relative mx-auto max-w-5xl px-6 py-24">
-          <h2
-            className={`${spaceMono.className} mb-4 text-center text-3xl font-bold`}
-            style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}
-          >
-            Multi-Chain by Design
-          </h2>
-          <p className="mb-12 text-center" style={{ color: "var(--text-secondary)" }}>
-            Three chains. One seamless experience. Each chain does what it does best.
-          </p>
-
-          <div className="grid gap-6 md:grid-cols-3">
+        <section className="px-6 py-20" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="mx-auto flex max-w-5xl flex-col items-center gap-12">
+            <div className="text-center">
+              <h2
+                className={`${spaceMono.className} mb-3 text-3xl font-bold`}
+                style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}
+              >
+                Multi-Chain by Design
+              </h2>
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                Each chain plays a specific role in the agent economy
+              </p>
+            </div>
+            <LogoCarousel />
+            <div className="grid w-full gap-6 md:grid-cols-3">
             {[
               {
                 color: "#C9A84C",
@@ -444,6 +450,7 @@ export default function HomePage() {
                 </span>
               </div>
             ))}
+            </div>
           </div>
         </section>
 
