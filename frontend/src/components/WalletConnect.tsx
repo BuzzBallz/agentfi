@@ -3,5 +3,11 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function WalletConnect() {
-  return <ConnectButton />;
+  return (
+    <ConnectButton
+      chainStatus="icon"
+      showBalance={false}
+      accountStatus="avatar"
+    />
+  );
 }

@@ -1,17 +1,22 @@
 import deployments from "../../../deployments.json";
+import { ogTestnet, adiTestnet } from "./chains";
 
-type Address = `0x${string}`;
+type DeploymentMap = typeof deployments;
+type ChainId = keyof DeploymentMap;
 
-const og = deployments["16600"];
-const adi = deployments["0"];
-
-function toAddress(value: string): Address | undefined {
-  if (!value) return undefined;
-  return value as Address;
+function getAddress(
+  chainId: number,
+  contractName: string,
+): `0x${string}` | undefined {
+  const chain = deployments[chainId.toString() as ChainId];
+  if (!chain) return undefined;
+  const address = (chain as Record<string, string>)[contractName];
+  if (!address || address === "") return undefined;
+  return address as `0x${string}`;
 }
 
 export const CONTRACT_ADDRESSES = {
-  AgentNFT: toAddress(og.AgentNFT),
-  AgentMarketplace: toAddress(og.AgentMarketplace),
-  AgentPayment: toAddress(adi.AgentPayment),
+  AgentNFT: getAddress(ogTestnet.id, "AgentNFT"),
+  AgentMarketplace: getAddress(ogTestnet.id, "AgentMarketplace"),
+  AgentPayment: getAddress(adiTestnet.id, "AgentPayment"),
 } as const;

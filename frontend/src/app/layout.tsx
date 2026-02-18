@@ -1,13 +1,15 @@
-"use client";
-
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider } from "wagmi";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { wagmiConfig } from "@/config/chains";
-import "@rainbow-me/rainbowkit/styles.css";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { Providers } from "@/components/Providers";
+import Navbar from "@/components/Navbar";
 import "./globals.css";
 
-const queryClient = new QueryClient();
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "AgentFi",
+  description: "The banking system for autonomous AI agents",
+};
 
 export default function RootLayout({
   children,
@@ -16,19 +18,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <title>AgentFi</title>
-        <meta
-          name="description"
-          content="The banking system for autonomous AI agents"
-        />
-      </head>
-      <body>
-        <WagmiProvider config={wagmiConfig}>
-          <QueryClientProvider client={queryClient}>
-            <RainbowKitProvider>{children}</RainbowKitProvider>
-          </QueryClientProvider>
-        </WagmiProvider>
+      <body className={inter.className}>
+        <Providers>
+          <Navbar />
+          {children}
+        </Providers>
       </body>
     </html>
   );
