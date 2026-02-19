@@ -3,15 +3,15 @@ import { motion } from "motion/react"
 import CircularText from "./CircularText"
 
 const OGLogo = () => (
-  <svg viewBox="0 0 120 60" width="56" height="28" fill="none">
-    {/* Left circle with slash */}
-    <circle cx="30" cy="30" r="26" stroke="#C9A84C" strokeWidth="7" fill="none"/>
-    <line x1="14" y1="46" x2="46" y2="14" stroke="#C9A84C" strokeWidth="6" strokeLinecap="round"/>
-    {/* Right G shape */}
+  <svg viewBox="0 0 140 80" width="60" height="34" fill="none">
+    {/* "0" — circle with diagonal slash inside */}
+    <circle cx="34" cy="40" r="28" stroke="#C9A84C" strokeWidth="8" fill="none" strokeLinecap="round"/>
+    <line x1="20" y1="55" x2="48" y2="25" stroke="#C9A84C" strokeWidth="7" strokeLinecap="round"/>
+    {/* "G" — open arc (270deg) with horizontal shelf pointing inward on right */}
     <path
-      d="M90 8 A26 26 0 1 0 90 52 L90 34 L104 34"
+      d="M136 16 A34 34 0 1 0 136 64 L136 44 L114 44"
       stroke="#C9A84C"
-      strokeWidth="7"
+      strokeWidth="8"
       fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -20,14 +20,15 @@ const OGLogo = () => (
 )
 
 const HederaLogo = () => (
-  <svg viewBox="0 0 100 100" width="44" height="44" fill="none">
+  <svg viewBox="0 0 100 100" width="48" height="48" fill="none">
+    {/* Gold filled circle background */}
     <circle cx="50" cy="50" r="48" fill="#C9A84C"/>
     {/* Left pillar */}
-    <rect x="24" y="22" width="11" height="56" fill="#1A1208" rx="1"/>
+    <rect x="23" y="20" width="13" height="60" fill="#1A1208" rx="1"/>
     {/* Right pillar */}
-    <rect x="65" y="22" width="11" height="56" fill="#1A1208" rx="1"/>
-    {/* Crossbar — thin, at true center */}
-    <rect x="24" y="44" width="52" height="12" fill="#1A1208" rx="1"/>
+    <rect x="64" y="20" width="13" height="60" fill="#1A1208" rx="1"/>
+    {/* Crossbar — starts at inner edge of left pillar, ends at inner edge of right pillar */}
+    <rect x="36" y="43" width="28" height="14" fill="#1A1208" rx="1"/>
   </svg>
 )
 
