@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any
 
 from openai import AsyncOpenAI
@@ -14,6 +15,8 @@ from agents.yield_optimizer import YieldOptimizerAgent
 from agents.risk_scorer import RiskScorerAgent
 
 logger = logging.getLogger(__name__)
+
+HEDERA_ENABLED = os.environ.get("HEDERA_ENABLED", "false").lower() == "true"
 
 # Registry — add new agents here, nowhere else
 AGENT_REGISTRY: dict[str, BaseAgent] = {
@@ -58,9 +61,10 @@ class AgentOrchestrator:
         content = response.choices[0].message.content or "{}"
         return json.loads(content)["steps"]
 
-    async def execute(self, query: str) -> str:
+    async def execute(self, query: str) -> dict[str, Any]:
         steps = await self._plan(query)
         outputs: list[str] = []
+        hedera_proofs: list[dict] = []
 
         for i, step in enumerate(steps):
             agent_name: str = step["agent"]
@@ -90,6 +94,21 @@ class AgentOrchestrator:
             except Exception as pay_err:
                 logger.warning("[orchestrator] payment failed (non-blocking): %s", pay_err)
 
+            # Hedera attestation — non-blocking, never crashes the flow
+            if HEDERA_ENABLED:
+                try:
+                    from hedera.attestation import attest_execution
+                    proof = await attest_execution(agent_name, agent_input, result)
+                    hedera_proofs.append(proof)
+                except Exception as h_err:
+                    logger.warning("[orchestrator] Hedera attestation skipped: %s", h_err)
+
             outputs.append(result)
 
-        return outputs[-1] if outputs else "No result produced."
+        return {
+            "result": outputs[-1] if outputs else "No result produced.",
+            "hedera_proof": {
+                "hcs_messages": [p["hcs_tx"] for p in hedera_proofs if p.get("hcs_tx")],
+                "agents_used": [s["agent"] for s in steps],
+            },
+        }
