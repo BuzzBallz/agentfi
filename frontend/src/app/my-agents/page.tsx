@@ -2,6 +2,7 @@
 import { useState } from "react"
 import GlareHover from "@/components/GlareHover"
 import PixelTransition from "@/components/PixelTransition"
+import AnimatedContent from "@/components/AnimatedContent"
 
 const AGENTS = [
   { id: "#0042", name: "Portfolio Analyzer", model: "gpt-4o-mini", capabilities: "DeFi Analysis", minted: "Feb 18, 2026", queries: "47", earned: "0.012 ADI", chain: "0G Chain", status: "ACTIVE" },
@@ -11,9 +12,20 @@ const AGENTS = [
 
 export default function MyAgentsPage() {
   const [active, setActive] = useState(0)
+  const [direction, setDirection] = useState<'left' | 'right'>('right')
+  const [key, setKey] = useState(0)
 
-  const prev = () => setActive(i => (i - 1 + AGENTS.length) % AGENTS.length)
-  const next = () => setActive(i => (i + 1) % AGENTS.length)
+  const prev = () => {
+    setDirection('left')
+    setActive(i => (i - 1 + AGENTS.length) % AGENTS.length)
+    setKey(k => k + 1)
+  }
+
+  const next = () => {
+    setDirection('right')
+    setActive(i => (i + 1) % AGENTS.length)
+    setKey(k => k + 1)
+  }
 
   const agent = AGENTS[active]
 
@@ -50,57 +62,69 @@ export default function MyAgentsPage() {
           >{"\u2039"}</button>
 
           {/* Active card — large center */}
-          <div style={{ flex: 1, background: "#241A0E", border: "1px solid #5C4422", borderRadius: 16, padding: 36, position: "relative", overflow: "hidden" }}>
-            {/* Gold top bar */}
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "#C9A84C" }} />
+          <AnimatedContent
+            key={key}
+            direction="horizontal"
+            reverse={direction === 'left'}
+            distance={120}
+            duration={0.5}
+            ease="power3.out"
+            animateOpacity={true}
+            initialOpacity={0}
+            style={{ width: "100%", flex: 1 }}
+          >
+            <div style={{ background: "#241A0E", border: "1px solid #5C4422", borderRadius: 16, padding: 36, position: "relative", overflow: "hidden" }}>
+              {/* Gold top bar */}
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "#C9A84C" }} />
 
-            {/* Top row */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <div style={{ background: "#1A1208", border: "1px solid #5C4422", borderRadius: 6, padding: "4px 14px", fontFamily: "monospace", fontSize: 13, color: "#C9A84C" }}>
-                {agent.id}
-              </div>
-              <span style={{ fontFamily: "monospace", fontSize: 12, color: agent.status === "ACTIVE" ? "#7A9E6E" : "#5C4A32" }}>
-                {"\u25CF"} {agent.status}
-              </span>
-            </div>
-
-            {/* Name */}
-            <h2 style={{ fontFamily: "monospace", color: "#F5ECD7", fontSize: 26, margin: "0 0 6px", letterSpacing: "0.02em" }}>{agent.name}</h2>
-            <p style={{ color: "#9A8060", fontSize: 13, margin: "0 0 24px", fontFamily: "monospace" }}>ERC-7857 {"\u00B7"} {agent.chain}</p>
-
-            {/* Divider */}
-            <div style={{ height: 1, background: "#3D2E1A", marginBottom: 24 }} />
-
-            {/* Metadata 2-col grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 32px", marginBottom: 28 }}>
-              {[
-                { label: "MODEL", value: agent.model },
-                { label: "CAPABILITIES", value: agent.capabilities },
-                { label: "MINTED", value: agent.minted },
-                { label: "CHAIN", value: agent.chain },
-                { label: "QUERIES RUN", value: agent.queries },
-                { label: "ADI EARNED", value: agent.earned },
-              ].map(f => (
-                <div key={f.label}>
-                  <p style={{ color: "#5C4A32", fontFamily: "monospace", fontSize: 10, letterSpacing: "0.15em", margin: "0 0 4px" }}>{f.label}</p>
-                  <p style={{ color: "#F5ECD7", fontFamily: "monospace", fontSize: 15, margin: 0, fontWeight: "bold" }}>{f.value}</p>
+              {/* Top row */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <div style={{ background: "#1A1208", border: "1px solid #5C4422", borderRadius: 6, padding: "4px 14px", fontFamily: "monospace", fontSize: 13, color: "#C9A84C" }}>
+                  {agent.id}
                 </div>
-              ))}
-            </div>
+                <span style={{ fontFamily: "monospace", fontSize: 12, color: agent.status === "ACTIVE" ? "#7A9E6E" : "#5C4A32" }}>
+                  {"\u25CF"} {agent.status}
+                </span>
+              </div>
 
-            {/* Action buttons */}
-            <div style={{ display: "flex", gap: 12 }}>
-              <PixelTransition
-                gridSize={6} pixelColor="#C9A84C" animationStepDuration={0.2} aspectRatio="0%"
-                style={{ width: 130, height: 38, borderRadius: 8, overflow: "hidden" }}
-                firstContent={<div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#C9A84C", color: "#1A1208", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Execute</div>}
-                secondContent={<div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#E8C97A", color: "#1A1208", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Execute</div>}
-              />
-              <GlareHover width="130px" height="38px" background="#1A1208" borderRadius="8px" borderColor="#5C4422" glareColor="#C9A84C" glareOpacity={0.2} transitionDuration={500}>
-                <span style={{ color: "#C9A84C", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Transfer {"\u2192"}</span>
-              </GlareHover>
+              {/* Name */}
+              <h2 style={{ fontFamily: "monospace", color: "#F5ECD7", fontSize: 26, margin: "0 0 6px", letterSpacing: "0.02em" }}>{agent.name}</h2>
+              <p style={{ color: "#9A8060", fontSize: 13, margin: "0 0 24px", fontFamily: "monospace" }}>ERC-7857 {"\u00B7"} {agent.chain}</p>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: "#3D2E1A", marginBottom: 24 }} />
+
+              {/* Metadata 2-col grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 32px", marginBottom: 28 }}>
+                {[
+                  { label: "MODEL", value: agent.model },
+                  { label: "CAPABILITIES", value: agent.capabilities },
+                  { label: "MINTED", value: agent.minted },
+                  { label: "CHAIN", value: agent.chain },
+                  { label: "QUERIES RUN", value: agent.queries },
+                  { label: "ADI EARNED", value: agent.earned },
+                ].map(f => (
+                  <div key={f.label}>
+                    <p style={{ color: "#5C4A32", fontFamily: "monospace", fontSize: 10, letterSpacing: "0.15em", margin: "0 0 4px" }}>{f.label}</p>
+                    <p style={{ color: "#F5ECD7", fontFamily: "monospace", fontSize: 15, margin: 0, fontWeight: "bold" }}>{f.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: "flex", gap: 12 }}>
+                <PixelTransition
+                  gridSize={6} pixelColor="#C9A84C" animationStepDuration={0.2} aspectRatio="0%"
+                  style={{ width: 130, height: 38, borderRadius: 8, overflow: "hidden" }}
+                  firstContent={<div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#C9A84C", color: "#1A1208", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Execute</div>}
+                  secondContent={<div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#E8C97A", color: "#1A1208", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Execute</div>}
+                />
+                <GlareHover width="130px" height="38px" background="#1A1208" borderRadius="8px" borderColor="#5C4422" glareColor="#C9A84C" glareOpacity={0.2} transitionDuration={500}>
+                  <span style={{ color: "#C9A84C", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Transfer {"\u2192"}</span>
+                </GlareHover>
+              </div>
             </div>
-          </div>
+          </AnimatedContent>
 
           {/* Next arrow */}
           <button onClick={next} style={{ background: "#241A0E", border: "1px solid #3D2E1A", borderRadius: "50%", width: 44, height: 44, color: "#C9A84C", fontSize: 20, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.2s" }}
