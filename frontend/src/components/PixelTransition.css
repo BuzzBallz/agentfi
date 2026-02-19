@@ -3,12 +3,16 @@
   cursor: pointer;
   outline: none;
   overflow: hidden;
+  display: block;
 }
 
 .pixelated-image-card__default,
 .pixelated-image-card__active {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -20,7 +24,10 @@
 
 .pixelated-image-card__pixels {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
 }
 

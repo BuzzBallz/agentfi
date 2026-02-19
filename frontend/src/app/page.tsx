@@ -139,61 +139,58 @@ export default function HomePage() {
                 className="fade-in-up mb-8 flex gap-4"
                 style={{ animationDelay: "300ms" }}
               >
-                <PixelTransition
-                  gridSize={8}
-                  pixelColor="#C9A84C"
-                  animationStepDuration={0.25}
-                  aspectRatio="0%"
-                  style={{ width: "fit-content", height: 44, borderRadius: 8 }}
-                  firstContent={
-                    <a
-                      href="/marketplace"
-                      style={{
+                <div style={{ position: "relative", width: "fit-content" }}>
+                  <PixelTransition
+                    gridSize={8}
+                    pixelColor="#C9A84C"
+                    animationStepDuration={0.25}
+                    aspectRatio="0%"
+                    style={{
+                      width: 180,
+                      height: 44,
+                      borderRadius: 8,
+                      overflow: "hidden",
+                    }}
+                    firstContent={
+                      <div style={{
+                        position: "absolute",
+                        inset: 0,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        width: "100%",
-                        height: 44,
-                        padding: "0 24px",
                         background: "#C9A84C",
                         color: "#1A1208",
                         fontFamily: "monospace",
                         fontSize: 13,
                         fontWeight: "bold",
                         letterSpacing: "0.1em",
-                        textDecoration: "none",
                         borderRadius: 8,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      Enter Marketplace
-                    </a>
-                  }
-                  secondContent={
-                    <a
-                      href="/marketplace"
-                      style={{
+                        cursor: "pointer",
+                      }}>
+                        Enter Marketplace
+                      </div>
+                    }
+                    secondContent={
+                      <div style={{
+                        position: "absolute",
+                        inset: 0,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        width: "100%",
-                        height: 44,
-                        padding: "0 24px",
                         background: "#E8C97A",
                         color: "#1A1208",
                         fontFamily: "monospace",
                         fontSize: 13,
                         fontWeight: "bold",
                         letterSpacing: "0.1em",
-                        textDecoration: "none",
                         borderRadius: 8,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      Enter Marketplace
-                    </a>
-                  }
-                />
+                        cursor: "pointer",
+                      }}>
+                        Enter Marketplace
+                      </div>
+                    }
+                  />
+                </div>
                 <Link
                   href="/dashboard"
                   className="cta-secondary rounded-lg px-6 py-3 font-medium"
