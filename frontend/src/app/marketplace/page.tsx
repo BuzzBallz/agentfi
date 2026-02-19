@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Space_Mono, DM_Sans } from "next/font/google"
 import { formatEther } from "viem"
@@ -267,6 +267,10 @@ export default function MarketplacePage() {
   const [activeFilter, setActiveFilter] = useState<Category>("All")
   const [search, setSearch] = useState("")
   const { agents: listedAgents, isLoading, isError } = useListedAgents()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   // Filter on-chain agents
   const filteredOnChain = listedAgents.filter((a: any) => {

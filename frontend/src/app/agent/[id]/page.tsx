@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Space_Mono, DM_Sans } from "next/font/google";
+import { useReadContract } from "wagmi";
 import { useAgentData } from "@/hooks/useAgentData";
 import { useHireAgent } from "@/hooks/useHireAgent";
 import { useExecuteAgent } from "@/hooks/useExecuteAgent";
 import { TOKEN_TO_AGENT } from "@/lib/api";
+import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import AgentMarketplaceAbi from "@/abi/AgentMarketplace.json";
 import { formatEther } from "viem";
 
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
@@ -52,6 +55,18 @@ export default function AgentPage({ params }: { params: { id: string } }) {
     isLoading: agentLoading,
     error: agentError,
   } = useExecuteAgent();
+
+  // Fetch listing to get owner address
+  const { data: listingData } = useReadContract({
+    address: CONTRACT_ADDRESSES.AgentMarketplace as `0x${string}`,
+    abi: AgentMarketplaceAbi,
+    functionName: "getListing",
+    args: [BigInt(tokenId)],
+    chainId: 16600,
+  });
+  const ownerAddress = listingData
+    ? ((listingData as any).owner ?? (listingData as any)[1]) as string
+    : null;
 
   const [query, setQuery] = useState("");
   const [step, setStep] = useState<
@@ -248,23 +263,52 @@ export default function AgentPage({ params }: { params: { id: string } }) {
               </div>
             </div>
 
-            <div>
-              <div
-                className={spaceMono.className}
-                style={{
-                  color: "#5C4A32",
-                  fontSize: 10,
-                  letterSpacing: "0.08em",
-                  marginBottom: 4,
-                }}
-              >
-                AGENT ID
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 16,
+              }}
+            >
+              <div>
+                <div
+                  className={spaceMono.className}
+                  style={{
+                    color: "#5C4A32",
+                    fontSize: 10,
+                    letterSpacing: "0.08em",
+                    marginBottom: 4,
+                  }}
+                >
+                  AGENT ID
+                </div>
+                <div
+                  className={spaceMono.className}
+                  style={{ color: "#9A8060", fontSize: 12 }}
+                >
+                  {agentId || "unknown"}
+                </div>
               </div>
-              <div
-                className={spaceMono.className}
-                style={{ color: "#9A8060", fontSize: 12 }}
-              >
-                {agentId || "unknown"}
+              <div>
+                <div
+                  className={spaceMono.className}
+                  style={{
+                    color: "#5C4A32",
+                    fontSize: 10,
+                    letterSpacing: "0.08em",
+                    marginBottom: 4,
+                  }}
+                >
+                  OWNER
+                </div>
+                <div
+                  className={spaceMono.className}
+                  style={{ color: "#9A8060", fontSize: 12, wordBreak: "break-all" }}
+                >
+                  {ownerAddress
+                    ? `${ownerAddress.slice(0, 6)}...${ownerAddress.slice(-4)}`
+                    : "—"}
+                </div>
               </div>
             </div>
 
