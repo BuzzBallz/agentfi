@@ -133,13 +133,16 @@ export default function MarketplacePage() {
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
+              justifyContent: "space-between",
               gap: 8,
+              minWidth: 160,
               transition: "border-color 0.2s",
             }}
               onMouseOver={e => (e.currentTarget.style.borderColor = "#C9A84C")}
               onMouseOut={e => (e.currentTarget.style.borderColor = "#5C4422")}
             >
-              {activeFilter === "All" ? "All Categories" : activeFilter} {"\u25BE"}
+              <span>{activeFilter === "All" ? "All Categories" : activeFilter}</span>
+              <span>{"\u25BE"}</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
