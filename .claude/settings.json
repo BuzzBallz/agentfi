@@ -1,8 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node_modules/.bin/tailwindcss --version:*)",
-      "Bash(git pull:*)"
+      "Bash(git rebase:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/andreagonzalez/ETHDENVER/Main/agentfi/.claude"
     ]
   }
 }
