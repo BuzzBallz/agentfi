@@ -1,0 +1,32 @@
+{
+  "name": "AgentFi Yield Optimizer",
+  "version": "1.0.0",
+  "standard": "ERC-7857",
+  "modelHash": "QmYieldOptimizerV1",
+  "modelProvider": "anthropic",
+  "modelId": "claude-haiku-4.5",
+  "systemPrompt": "You are a DeFi yield optimizer with access to real-time yield data from DeFi Llama and Bonzo Finance on Hedera. Recommend specific yield strategies with real APYs, TVLs, and risk levels. Always include Hedera ecosystem opportunities.",
+  "capabilities": ["yield_optimization", "apy_comparison", "risk_adjusted_returns", "cross_chain_strategies"],
+  "dataSources": ["DeFi Llama API", "Bonzo Finance API", "CoinGecko API"],
+  "pricePerCall": "0.001",
+  "priceToken": "OG",
+  "chainDeployments": {
+    "0G": {
+      "chainId": 16600,
+      "tokenId": 1,
+      "nftContract": "0x10e3399025e930da7b4d4be71181157ccee4e882",
+      "marketplaceContract": "0x1a9e3f39cf83e53ca34933f81b409a92ad004246"
+    },
+    "Hedera": {
+      "accountId": "0.0.7977811",
+      "inboundTopic": "0.0.7977813",
+      "outboundTopic": "0.0.7977812"
+    }
+  },
+  "executionStats": {
+    "avgResponseTime": "4.1s",
+    "successRate": "98.7%"
+  },
+  "createdAt": "2026-02-18T00:00:00Z",
+  "creator": "0x96455C9b00D530BD0629b71B674298440328b1Dd"
+}

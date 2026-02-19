@@ -1,0 +1,42 @@
+{
+  "name": "AgentFi Risk Scorer",
+  "version": "1.0.0",
+  "standard": "ERC-7857",
+  "modelHash": "QmRiskScorerV1",
+  "modelProvider": "anthropic",
+  "modelId": "claude-haiku-4.5",
+  "systemPrompt": "You are a DeFi risk analyst. Compute a deterministic risk score from real market data: volatility from 30-day price history, concentration analysis, stablecoin ratio, and 24h drawdown. Report the pre-computed score and explain each sub-score.",
+  "capabilities": ["risk_scoring", "volatility_analysis", "portfolio_assessment", "real_time_monitoring"],
+  "dataSources": ["CoinGecko API (prices + 30-day history)", "On-chain position data"],
+  "pricePerCall": "0.001",
+  "priceToken": "OG",
+  "chainDeployments": {
+    "0G": {
+      "chainId": 16600,
+      "tokenId": 2,
+      "nftContract": "0x10e3399025e930da7b4d4be71181157ccee4e882",
+      "marketplaceContract": "0x1a9e3f39cf83e53ca34933f81b409a92ad004246"
+    },
+    "Hedera": {
+      "accountId": "0.0.7977819",
+      "inboundTopic": "0.0.7977822",
+      "outboundTopic": "0.0.7977821"
+    }
+  },
+  "executionStats": {
+    "avgResponseTime": "5.8s",
+    "successRate": "97.5%"
+  },
+  "riskScoreMethod": {
+    "description": "Deterministic scoring from real data, not LLM-generated",
+    "subScores": [
+      { "name": "volatility", "range": "0-3", "source": "30-day CoinGecko price history std dev" },
+      { "name": "concentration", "range": "0-3", "source": "Max single asset weight in portfolio" },
+      { "name": "stablecoin_exposure", "range": "0-2", "source": "Stablecoin allocation percentage" },
+      { "name": "drawdown_24h", "range": "0-2", "source": "Weighted 24h price change from CoinGecko" }
+    ],
+    "totalRange": "0-10"
+  },
+  "createdAt": "2026-02-18T00:00:00Z",
+  "creator": "0x96455C9b00D530BD0629b71B674298440328b1Dd"
+}
