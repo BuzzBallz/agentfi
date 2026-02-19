@@ -165,27 +165,9 @@ export default function HomePage() {
               </div>
 
               <div style={{ width: "100%", marginTop: 24, overflow: "hidden" }}>
-                <CurvedLoop
-                  marqueeText="✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ "
-                  speed={0.4}
-                  curveAmount={900}
-                  direction="left"
-                  className="curved-text-gold"
-                />
-                <CurvedLoop
-                  marqueeText="✦ Marketplace Agents ✦ Marketplace Agents ✦ Marketplace Agents ✦ "
-                  speed={0.5}
-                  curveAmount={1000}
-                  direction="right"
-                  className="curved-text-gold"
-                />
-                <CurvedLoop
-                  marqueeText="✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ "
-                  speed={0.3}
-                  curveAmount={850}
-                  direction="left"
-                  className="curved-text-gold"
-                />
+                <CurvedLoop marqueeText="✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ " speed={0.4} curveAmount={60} direction="left" className="curved-text-gold"/>
+                <CurvedLoop marqueeText="✦ Marketplace Agents ✦ Marketplace Agents ✦ Marketplace Agents ✦ " speed={0.5} curveAmount={80} direction="right" className="curved-text-gold"/>
+                <CurvedLoop marqueeText="✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ " speed={0.3} curveAmount={50} direction="left" className="curved-text-gold"/>
               </div>
             </div>
 

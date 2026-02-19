@@ -44,10 +44,7 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
   }, [])
 
   const pathD = useMemo(() => {
-    const h = 120
-    const midY = h / 2
-    const cy = midY + curveAmount / 10
-    return `M -${width * 0.5} ${midY} Q ${width * 0.5} ${cy} ${width * 1.5} ${midY}`
+    return `M -100 80 Q ${width * 0.5} ${80 - curveAmount} ${width + 100} 80`
   }, [width, curveAmount])
 
   const text = marqueeText
@@ -132,7 +129,7 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
       <svg
         ref={svgRef}
         className="curved-loop-svg"
-        viewBox={`0 0 ${width} 120`}
+        viewBox={`0 0 ${width} 180`}
         preserveAspectRatio="none"
       >
         <defs>
