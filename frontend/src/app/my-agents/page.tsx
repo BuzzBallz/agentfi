@@ -1,11 +1,8 @@
 "use client"
-import { useState } from "react"
-import dynamic from "next/dynamic"
+import { useState, useEffect } from "react"
+import TiltedCard from "@/components/TiltedCard"
 import GlareHover from "@/components/GlareHover"
-import PixelTransition from "@/components/PixelTransition"
 import AnimatedContent from "@/components/AnimatedContent"
-
-const MagicBento = dynamic(() => import("@/components/MagicBento"), { ssr: false })
 
 const AGENTS = [
   { id: "#0042", name: "Portfolio Analyzer", model: "gpt-4o-mini", capabilities: "DeFi Analysis", minted: "Feb 18, 2026", queries: "47", earned: "0.012 ADI", chain: "0G Chain", status: "ACTIVE" },
@@ -13,133 +10,91 @@ const AGENTS = [
   { id: "#0044", name: "Risk Scorer", model: "gpt-4o-mini", capabilities: "Risk Assessment", minted: "Feb 18, 2026", queries: "89", earned: "0.010 ADI", chain: "0G Chain", status: "IDLE" },
 ]
 
+function generateAgentImage(_agent: typeof AGENTS[0]): string {
+  const canvas = document.createElement("canvas")
+  canvas.width = 400
+  canvas.height = 500
+  const ctx = canvas.getContext("2d")!
+  ctx.fillStyle = "#1A1208"
+  ctx.fillRect(0, 0, 400, 500)
+  ctx.fillStyle = "#C9A84C"
+  ctx.fillRect(0, 0, 400, 3)
+  // dot pattern
+  ctx.fillStyle = "#241A0E"
+  for (let y = 20; y < 500; y += 28) {
+    for (let x = 20; x < 400; x += 28) {
+      ctx.beginPath()
+      ctx.arc(x, y, 2, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  return canvas.toDataURL("image/png")
+}
+
 export default function MyAgentsPage() {
-  const [active, setActive] = useState(0)
-  const [direction, setDirection] = useState<'left' | 'right'>('right')
-  const [key, setKey] = useState(0)
+  const [images, setImages] = useState<string[]>([])
 
-  const prev = () => {
-    setDirection('left')
-    setActive(i => (i - 1 + AGENTS.length) % AGENTS.length)
-    setKey(k => k + 1)
-  }
+  useEffect(() => {
+    setImages(AGENTS.map(generateAgentImage))
+  }, [])
 
-  const next = () => {
-    setDirection('right')
-    setActive(i => (i + 1) % AGENTS.length)
-    setKey(k => k + 1)
-  }
-
-  const agent = AGENTS[active]
+  const overlayContent = (a: typeof AGENTS[0]) => (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <span style={{ background: "#1A1208", border: "1px solid #5C4422", borderRadius: 6, padding: "3px 10px", fontFamily: "monospace", fontSize: 12, color: "#C9A84C" }}>{a.id}</span>
+        <span style={{ fontFamily: "monospace", fontSize: 11, color: a.status === "ACTIVE" ? "#7A9E6E" : "#5C4A32" }}>{"\u25CF"} {a.status}</span>
+      </div>
+      <h3 style={{ fontFamily: "monospace", color: "#F5ECD7", fontSize: 18, margin: "0 0 4px" }}>{a.name}</h3>
+      <p style={{ color: "#9A8060", fontSize: 11, margin: "0 0 12px", fontFamily: "monospace" }}>ERC-7857 {"\u00B7"} {a.chain}</p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px" }}>
+        {[
+          { label: "QUERIES", value: a.queries },
+          { label: "EARNED", value: a.earned },
+          { label: "MODEL", value: a.model },
+          { label: "MINTED", value: a.minted },
+        ].map(f => (
+          <div key={f.label}>
+            <p style={{ color: "#5C4A32", fontFamily: "monospace", fontSize: 9, letterSpacing: "0.12em", margin: "0 0 2px" }}>{f.label}</p>
+            <p style={{ color: "#F5ECD7", fontFamily: "monospace", fontSize: 12, margin: 0, fontWeight: "bold" }}>{f.value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
     <main style={{ minHeight: "100vh", padding: "32px 48px", position: "relative", zIndex: 1 }}>
 
-      {/* MagicBento Header */}
+      {/* Title */}
       <div style={{ marginBottom: 40 }}>
-        <MagicBento
-          textAutoHide={true}
-          enableStars={true}
-          enableSpotlight={true}
-          enableBorderGlow={true}
-          enableTilt={true}
-          enableMagnetism={true}
-          clickEffect={true}
-          glowColor="201, 168, 76"
-          spotlightRadius={300}
-          particleCount={10}
-        />
+        <h1 style={{ fontFamily: "monospace", fontSize: 28, color: "#F5ECD7", margin: 0, letterSpacing: "0.02em" }}>My Agents</h1>
+        <p style={{ color: "#9A8060", fontSize: 14, marginTop: 8 }}>Your iNFT collection on 0G Chain</p>
       </div>
 
-      {/* iNFT Carousel */}
-      <div style={{ marginBottom: 48 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-
-          {/* Prev arrow */}
-          <button onClick={prev} style={{ background: "#241A0E", border: "1px solid #3D2E1A", borderRadius: "50%", width: 44, height: 44, color: "#C9A84C", fontSize: 20, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.2s" }}
-            onMouseOver={e => (e.currentTarget.style.borderColor = "#C9A84C")}
-            onMouseOut={e => (e.currentTarget.style.borderColor = "#3D2E1A")}
-          >{"\u2039"}</button>
-
-          {/* Active card — large center */}
-          <AnimatedContent
-            key={key}
-            direction="horizontal"
-            reverse={direction === 'left'}
-            distance={120}
-            duration={0.5}
-            ease="power3.out"
-            animateOpacity={true}
-            initialOpacity={0}
-            style={{ width: "100%", flex: 1 }}
-          >
-            <div style={{ background: "#241A0E", border: "1px solid #5C4422", borderRadius: 16, padding: 36, position: "relative", overflow: "hidden" }}>
-              {/* Gold top bar */}
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "#C9A84C" }} />
-
-              {/* Top row */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <div style={{ background: "#1A1208", border: "1px solid #5C4422", borderRadius: 6, padding: "4px 14px", fontFamily: "monospace", fontSize: 13, color: "#C9A84C" }}>
-                  {agent.id}
-                </div>
-                <span style={{ fontFamily: "monospace", fontSize: 12, color: agent.status === "ACTIVE" ? "#7A9E6E" : "#5C4A32" }}>
-                  {"\u25CF"} {agent.status}
-                </span>
-              </div>
-
-              {/* Name */}
-              <h2 style={{ fontFamily: "monospace", color: "#F5ECD7", fontSize: 26, margin: "0 0 6px", letterSpacing: "0.02em" }}>{agent.name}</h2>
-              <p style={{ color: "#9A8060", fontSize: 13, margin: "0 0 24px", fontFamily: "monospace" }}>ERC-7857 {"\u00B7"} {agent.chain}</p>
-
-              {/* Divider */}
-              <div style={{ height: 1, background: "#3D2E1A", marginBottom: 24 }} />
-
-              {/* Metadata 2-col grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 32px", marginBottom: 28 }}>
-                {[
-                  { label: "MODEL", value: agent.model },
-                  { label: "CAPABILITIES", value: agent.capabilities },
-                  { label: "MINTED", value: agent.minted },
-                  { label: "CHAIN", value: agent.chain },
-                  { label: "QUERIES RUN", value: agent.queries },
-                  { label: "ADI EARNED", value: agent.earned },
-                ].map(f => (
-                  <div key={f.label}>
-                    <p style={{ color: "#5C4A32", fontFamily: "monospace", fontSize: 10, letterSpacing: "0.15em", margin: "0 0 4px" }}>{f.label}</p>
-                    <p style={{ color: "#F5ECD7", fontFamily: "monospace", fontSize: 15, margin: 0, fontWeight: "bold" }}>{f.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Action buttons */}
-              <div style={{ display: "flex", gap: 12 }}>
-                <PixelTransition
-                  gridSize={6} pixelColor="#C9A84C" animationStepDuration={0.2} aspectRatio="0%"
-                  style={{ width: 130, height: 38, borderRadius: 8, overflow: "hidden" }}
-                  firstContent={<div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#C9A84C", color: "#1A1208", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Execute</div>}
-                  secondContent={<div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#E8C97A", color: "#1A1208", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Execute</div>}
-                />
-                <GlareHover width="130px" height="38px" background="#1A1208" borderRadius="8px" borderColor="#5C4422" glareColor="#C9A84C" glareOpacity={0.2} transitionDuration={500}>
-                  <span style={{ color: "#C9A84C", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Transfer {"\u2192"}</span>
-                </GlareHover>
-              </div>
-            </div>
-          </AnimatedContent>
-
-          {/* Next arrow */}
-          <button onClick={next} style={{ background: "#241A0E", border: "1px solid #3D2E1A", borderRadius: "50%", width: 44, height: 44, color: "#C9A84C", fontSize: 20, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.2s" }}
-            onMouseOver={e => (e.currentTarget.style.borderColor = "#C9A84C")}
-            onMouseOut={e => (e.currentTarget.style.borderColor = "#3D2E1A")}
-          >{"\u203A"}</button>
-        </div>
-
-        {/* Dot indicators */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 20 }}>
-          {AGENTS.map((_, i) => (
-            <button key={i} onClick={() => setActive(i)} style={{ width: 8, height: 8, borderRadius: "50%", border: "none", cursor: "pointer", background: i === active ? "#C9A84C" : "#3D2E1A", transform: i === active ? "scale(1.3)" : "scale(1)", transition: "all 0.2s" }} />
+      {/* 3 TiltedCards side by side */}
+      {images.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, marginBottom: 48 }}>
+          {AGENTS.map((agent, i) => (
+            <AnimatedContent key={i} direction="vertical" distance={40} duration={0.6} delay={i * 0.15} animateOpacity>
+              <TiltedCard
+                imageSrc={images[i]}
+                altText={agent.name}
+                captionText={agent.id}
+                containerHeight="480px"
+                containerWidth="100%"
+                imageHeight="480px"
+                imageWidth="100%"
+                scaleOnHover={1.04}
+                rotateAmplitude={10}
+                showMobileWarning={false}
+                showTooltip={true}
+                displayOverlayContent={true}
+                overlayContent={overlayContent(agent)}
+              />
+            </AnimatedContent>
           ))}
         </div>
-      </div>
+      )}
 
       {/* Activity timeline */}
       <div style={{ marginBottom: 40 }}>
@@ -164,7 +119,7 @@ export default function MyAgentsPage() {
         </div>
       </div>
 
-      {/* CTA Banner */}
+      {/* CTA */}
       <div style={{ background: "#2E2010", border: "1px solid #5C4422", borderRadius: 12, padding: 28, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h3 style={{ fontFamily: "monospace", color: "#F5ECD7", fontSize: 18, margin: "0 0 8px" }}>Expand your fleet</h3>
