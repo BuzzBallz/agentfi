@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-openai
+anthropic
 hedera-agent-kit>=3.2.0
 hiero-sdk-python>=0.1.9
 python-dotenv

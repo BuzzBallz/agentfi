@@ -8,5 +8,6 @@ declare namespace NodeJS {
     NEXT_PUBLIC_OG_MARKETPLACE_ADDRESS: string;
     NEXT_PUBLIC_ADI_PAYMENT_ADDRESS: string;
     NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: string;
+    NEXT_PUBLIC_API_URL: string;
   }
 }

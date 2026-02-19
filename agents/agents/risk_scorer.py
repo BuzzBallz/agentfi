@@ -1,4 +1,4 @@
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 from agents.base_agent import BaseAgent
 
 SYSTEM_PROMPT = (
@@ -15,15 +15,15 @@ class RiskScorerAgent(BaseAgent):
 
     async def execute(self, query: str) -> str:
         try:
-            client = AsyncOpenAI()
-            response = await client.chat.completions.create(
-                model="gpt-4o-mini",
+            client = AsyncAnthropic()
+            response = await client.messages.create(
+                model="claude-haiku-4-5-20251001",
                 max_tokens=500,
+                system=SYSTEM_PROMPT,
                 messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": query},
                 ],
             )
-            return response.choices[0].message.content or ""
+            return response.content[0].text or ""
         except Exception as e:
             return f"Agent error: {str(e)}"
