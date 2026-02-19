@@ -57,7 +57,7 @@ function SidebarOverlay() {
 
 export function SidebarHeader({ children }: { children?: React.ReactNode }) {
   return (
-    <div style={{ padding: "24px 20px 16px", borderBottom: "1px solid #3D2E1A" }}>
+    <div style={{ padding: "16px 20px", borderBottom: "1px solid #3D2E1A", minHeight: 60 }}>
       {children}
     </div>
   )

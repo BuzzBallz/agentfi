@@ -28,7 +28,6 @@ export default function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }} />
       </SidebarHeader>
 
       <SidebarContent>
