@@ -2,8 +2,10 @@ import type { Metadata } from "next"
 import "./globals.css"
 import dynamic from "next/dynamic"
 import { Providers } from "@/components/Providers"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
-const CardNav = dynamic(() => import("@/components/CardNav"), { ssr: false })
+const AppSidebar = dynamic(() => import("@/components/AppSidebar"), { ssr: false })
+const TopBar = dynamic(() => import("@/components/TopBar"), { ssr: false })
 const DotGrid = dynamic(() => import("@/components/DotGrid"), { ssr: false })
 
 export const metadata: Metadata = {
@@ -27,10 +29,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <div style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
           <Providers>
-            <CardNav />
-            <div style={{ paddingTop: 60 }}>
-              {children}
-            </div>
+            <SidebarProvider>
+              <AppSidebar />
+              <TopBar />
+              <div style={{ paddingTop: 60 }}>
+                {children}
+              </div>
+            </SidebarProvider>
           </Providers>
         </div>
       </body>
