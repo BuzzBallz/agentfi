@@ -5,7 +5,7 @@ import logging
 import os
 from typing import Any
 
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 
 from agents.base_agent import BaseAgent
 from agents.payments.base_payment import BasePaymentProvider
@@ -46,19 +46,24 @@ Return ONLY valid JSON, no markdown, no explanation:
 
 class AgentOrchestrator:
     def __init__(self, payment_provider: BasePaymentProvider | None = None) -> None:
-        self.client = AsyncOpenAI()
+        self.client = AsyncAnthropic()
         self.payment_provider = payment_provider or MockPaymentProvider()
 
     async def _plan(self, query: str) -> list[dict[str, Any]]:
-        response = await self.client.chat.completions.create(
-            model="gpt-4o-mini",
+        response = await self.client.messages.create(
+            model="claude-haiku-4-5-20251001",
             max_tokens=300,
+            system=ROUTER_PROMPT,
             messages=[
-                {"role": "system", "content": ROUTER_PROMPT},
                 {"role": "user", "content": query},
             ],
         )
-        content = response.choices[0].message.content or "{}"
+        content = response.content[0].text or "{}"
+        # Strip markdown code fences if present
+        if "```" in content:
+            content = content.split("```json")[-1].split("```")[0].strip()
+            if not content:
+                content = "{}"
         return json.loads(content)["steps"]
 
     async def execute(self, query: str) -> dict[str, Any]:
