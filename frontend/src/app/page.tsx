@@ -1,7 +1,7 @@
-import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Space_Mono, DM_Sans } from "next/font/google";
 import PixelTransition from "@/components/PixelTransition";
+import GlareHover from "@/components/GlareHover";
 
 const LogoCarousel = dynamic(() => import("@/components/LogoCarousel"), { ssr: false });
 const CurvedLoop = dynamic(() => import("@/components/CurvedLoop"), { ssr: false });
@@ -191,13 +191,37 @@ export default function HomePage() {
                     }
                   />
                 </div>
-                <Link
-                  href="/dashboard"
-                  className="cta-secondary rounded-lg px-6 py-3 font-medium"
-                  style={{ border: "1px solid var(--gold)", color: "var(--gold)" }}
+                <GlareHover
+                  width="180px"
+                  height="44px"
+                  background="#241A0E"
+                  borderRadius="8px"
+                  borderColor="#5C4422"
+                  glareColor="#C9A84C"
+                  glareOpacity={0.25}
+                  glareAngle={-45}
+                  glareSize={250}
+                  transitionDuration={600}
                 >
-                  View Dashboard
-                </Link>
+                  <a
+                    href="/dashboard"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: "100%",
+                      color: "#C9A84C",
+                      fontFamily: "monospace",
+                      fontSize: 13,
+                      fontWeight: "bold",
+                      letterSpacing: "0.1em",
+                      textDecoration: "none",
+                    }}
+                  >
+                    View Dashboard
+                  </a>
+                </GlareHover>
               </div>
 
               <div style={{ width: "100%", marginTop: 24, overflow: "hidden" }}>
