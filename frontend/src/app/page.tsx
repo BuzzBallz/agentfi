@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import { Space_Mono, DM_Sans } from "next/font/google";
 
 const LogoCarousel = dynamic(() => import("@/components/LogoCarousel"), { ssr: false });
+const CurvedLoop = dynamic(() => import("@/components/CurvedLoop"), { ssr: false });
 
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
 const dmSans = DM_Sans({ subsets: ["latin"] });
@@ -112,7 +113,7 @@ export default function HomePage() {
         <div className="scanline-overlay pointer-events-none fixed inset-0" />
 
         {/* ── Section 1: Hero ── */}
-        <section className="relative mx-auto flex min-h-screen max-w-7xl items-center px-6 py-20">
+        <section className="relative mx-auto flex min-h-screen max-w-7xl items-center px-6" style={{ paddingTop: "40px", paddingBottom: "80px" }}>
           <div className="grid w-full gap-12 lg:grid-cols-5">
             {/* Left */}
             <div className="flex flex-col justify-center lg:col-span-3">
@@ -163,21 +164,28 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <div
-                className="fade-in-up flex gap-4"
-                style={{ animationDelay: "400ms" }}
-              >
-                {["Marketplace Agents", "Multi-Chain"].map(
-                  (stat) => (
-                    <span
-                      key={stat}
-                      className={`${spaceMono.className} rounded px-3 py-1.5 text-xs`}
-                      style={{ background: "rgba(201,168,76,0.08)", border: "1px solid var(--border-bright)", color: "var(--gold)" }}
-                    >
-                      {stat}
-                    </span>
-                  ),
-                )}
+              <div style={{ width: "100%", marginTop: 24, overflow: "hidden" }}>
+                <CurvedLoop
+                  marqueeText="✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ "
+                  speed={1.5}
+                  curveAmount={300}
+                  direction="left"
+                  className="curved-text-gold"
+                />
+                <CurvedLoop
+                  marqueeText="✦ Marketplace Agents ✦ Marketplace Agents ✦ Marketplace Agents ✦ "
+                  speed={2}
+                  curveAmount={350}
+                  direction="right"
+                  className="curved-text-gold"
+                />
+                <CurvedLoop
+                  marqueeText="✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ "
+                  speed={1.2}
+                  curveAmount={280}
+                  direction="left"
+                  className="curved-text-gold"
+                />
               </div>
             </div>
 
