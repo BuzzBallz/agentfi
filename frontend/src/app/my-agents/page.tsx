@@ -4,6 +4,7 @@ import TiltedCard from "@/components/TiltedCard"
 import GlareHover from "@/components/GlareHover"
 import AnimatedContent from "@/components/AnimatedContent"
 import SpotlightCard from "@/components/SpotlightCard"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const AGENTS = [
   { id: "#0042", name: "Portfolio Analyzer", model: "gpt-4o-mini", capabilities: "DeFi Analysis", minted: "Feb 18, 2026", queries: "47", earned: "0.012 ADI", chain: "0G Chain", status: "ACTIVE" },
@@ -141,25 +142,52 @@ export default function MyAgentsPage() {
 
       {/* Activity timeline */}
       <div style={{ marginBottom: 40 }}>
-        <h2 style={{ fontFamily: "monospace", color: "#C9A84C", fontSize: 16, marginBottom: 24, letterSpacing: "0.1em" }}>iNFT Activity</h2>
-        <div style={{ position: "relative", paddingLeft: 24 }}>
-          <div style={{ position: "absolute", left: 5, top: 0, bottom: 0, width: 1, background: "#3D2E1A" }} />
-          {[
-            { time: "14:32", title: "iNFT #0044 executed", detail: "Risk score computed: 7.2/10" },
-            { time: "14:28", title: "Payment settled", detail: "0.005 ADI received from 0x8b...c3" },
-            { time: "14:15", title: "iNFT #0043 executed", detail: "APY 12.4% found on Aave v3" },
-            { time: "13:50", title: "iNFT #0042 executed", detail: "Rebalance recommendation generated" },
-            { time: "13:20", title: "iNFT #0044 registered", detail: "Agent registered on Hedera via HCS-10" },
-            { time: "12:00", title: "Collection minted", detail: "3 iNFTs minted on 0G Chain \u2713" },
-          ].map((event, i) => (
-            <div key={i} style={{ position: "relative", marginBottom: 24, paddingLeft: 20 }}>
-              <div style={{ position: "absolute", left: -20, top: 4, width: 10, height: 10, borderRadius: "50%", background: "#C9A84C" }} />
-              <span style={{ fontFamily: "monospace", fontSize: 11, color: "#5C4A32" }}>{event.time}</span>
-              <p style={{ color: "#F5ECD7", fontSize: 13, margin: "4px 0 2px" }}>{event.title}</p>
-              <p style={{ color: "#9A8060", fontSize: 12, margin: 0 }}>{event.detail}</p>
-            </div>
-          ))}
-        </div>
+        <h2 style={{ fontFamily: "monospace", color: "#C9A84C", fontSize: 16, marginBottom: 16, letterSpacing: "0.1em" }}>
+          iNFT Activity
+        </h2>
+
+        <ScrollArea
+          style={{
+            height: 280,
+            width: "100%",
+            borderRadius: 12,
+            border: "1px solid #3D2E1A",
+            background: "#241A0E",
+            padding: 20,
+          }}
+        >
+          <div style={{ padding: "4px 0", position: "relative" }}>
+            {/* Vertical line */}
+            <div style={{ position: "absolute", left: 5, top: 0, bottom: 0, width: 1, background: "#3D2E1A" }} />
+
+            {[
+              { time: "14:32", title: "iNFT #0044 executed", detail: "Risk score computed: 7.2/10", icon: "\u25CE", color: "#C47A5A" },
+              { time: "14:28", title: "Payment settled", detail: "0.005 ADI received from 0x8b...c3", icon: "\u2713", color: "#7A9E6E" },
+              { time: "14:15", title: "iNFT #0043 executed", detail: "APY 12.4% found on Aave v3", icon: "\u25CE", color: "#C9A84C" },
+              { time: "13:50", title: "iNFT #0042 executed", detail: "Rebalance recommendation generated", icon: "\u25CE", color: "#C9A84C" },
+              { time: "13:20", title: "iNFT #0044 registered", detail: "Agent registered on Hedera via HCS-10", icon: "\u2713", color: "#7A9E6E" },
+              { time: "12:00", title: "Collection minted", detail: "3 iNFTs minted on 0G Chain \u2713", icon: "\u2713", color: "#7A9E6E" },
+              { time: "11:45", title: "ADI payment confirmed", detail: "0.031 ADI total deposited", icon: "\u2713", color: "#7A9E6E" },
+              { time: "11:30", title: "0G Chain synced", detail: "iNFT metadata updated on-chain", icon: "\u25CE", color: "#C9A84C" },
+            ].map((event, i) => (
+              <div key={i} style={{ position: "relative", marginBottom: 20, paddingLeft: 24 }}>
+                {/* Colored dot */}
+                <div style={{
+                  position: "absolute", left: 0, top: 3,
+                  width: 10, height: 10, borderRadius: "50%",
+                  background: event.color, border: "1px solid #1A1208",
+                }} />
+                <div style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
+                  <span style={{ fontFamily: "monospace", fontSize: 10, color: "#5C4A32", flexShrink: 0 }}>{event.time}</span>
+                  <div>
+                    <p style={{ color: "#F5ECD7", fontSize: 13, margin: "0 0 2px", fontWeight: 500 }}>{event.title}</p>
+                    <p style={{ color: "#9A8060", fontSize: 12, margin: 0 }}>{event.detail}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
 
       {/* CTA */}
