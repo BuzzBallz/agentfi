@@ -21,14 +21,13 @@ const OGLogo = () => (
 
 const HederaLogo = () => (
   <svg viewBox="0 0 100 100" width="48" height="48" fill="none">
-    {/* Dark brown circle matching site background */}
     <circle cx="50" cy="50" r="48" fill="#241A0E"/>
-    {/* Left pillar — gold */}
-    <rect x="26" y="22" width="12" height="56" fill="#C9A84C" rx="1"/>
-    {/* Right pillar — gold */}
-    <rect x="62" y="22" width="12" height="56" fill="#C9A84C" rx="1"/>
-    {/* Crossbar — gold, inner edges only */}
-    <rect x="38" y="44" width="24" height="12" fill="#C9A84C" rx="1"/>
+    {/* Left vertical bar */}
+    <rect x="22" y="20" width="14" height="60" fill="#C9A84C" rx="1"/>
+    {/* Right vertical bar */}
+    <rect x="64" y="20" width="14" height="60" fill="#C9A84C" rx="1"/>
+    {/* Horizontal crossbar — between inner edges only: x=36 to x=64 */}
+    <rect x="36" y="43" width="28" height="14" fill="#C9A84C" rx="1"/>
   </svg>
 )
 
