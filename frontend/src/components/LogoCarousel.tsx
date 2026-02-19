@@ -41,9 +41,9 @@ const ADILogo = () => (
 )
 
 const CHAINS = [
-  { id: "og",     Logo: OGLogo,     name: "0G Chain",  role: "Agent Ownership",    text: "iNFT · ERC-7857 · 0G CHAIN · AGENT · ",    spinDuration: 16, onHover: "speedUp"   as const },
-  { id: "hedera", Logo: HederaLogo, name: "Hedera",    role: "Agent Execution",    text: "HEDERA · OPENCLAW · HCS-10 · AGENT KIT · ", spinDuration: 20, onHover: "slowDown"  as const },
-  { id: "adi",    Logo: ADILogo,    name: "ADI Chain", role: "Compliant Payments", text: "ADI CHAIN · PAYMENTS · ZKSTACK · FATF · ",  spinDuration: 24, onHover: "goBonkers" as const },
+  { id: "og",     Logo: OGLogo,     name: "0G Chain",  role: "Agent Ownership",    text: "iNFT · ERC-7857 · 0G CHAIN · AGENT · ",    spinDuration: 16, onHover: "speedUp"   as const, url: "https://0g.ai" },
+  { id: "hedera", Logo: HederaLogo, name: "Hedera",    role: "Agent Execution",    text: "HEDERA · OPENCLAW · HCS-10 · AGENT KIT · ", spinDuration: 20, onHover: "slowDown"  as const, url: "https://hedera.com" },
+  { id: "adi",    Logo: ADILogo,    name: "ADI Chain", role: "Compliant Payments", text: "ADI CHAIN · PAYMENTS · ZKSTACK · FATF · ",  spinDuration: 24, onHover: "goBonkers" as const, url: "https://adi.foundation" },
 ]
 
 export default function LogoCarousel() {
@@ -62,9 +62,30 @@ export default function LogoCarousel() {
             {/* Spinning ring + logo */}
             <div style={{ position: "relative", width: 140, height: 140 }}>
               <CircularText text={chain.text} spinDuration={chain.spinDuration} onHover={chain.onHover} />
-              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center", width: 72, height: 72 }}>
+              <a
+                href={chain.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 72,
+                  height: 72,
+                  cursor: "pointer",
+                  transition: "opacity 0.2s",
+                  textDecoration: "none",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.opacity = "0.7")}
+                onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
+              >
                 <Logo />
-              </div>
+              </a>
             </div>
             <p style={{ color: "#C9A84C", fontFamily: "monospace", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase" }}>
               {chain.name}
