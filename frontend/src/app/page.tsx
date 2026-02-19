@@ -117,13 +117,6 @@ export default function HomePage() {
           <div className="grid w-full gap-12 lg:grid-cols-5">
             {/* Left */}
             <div className="flex flex-col justify-center lg:col-span-3">
-              <div
-                className="fade-in-up mb-6 inline-block w-fit rounded-full px-4 py-1.5 text-sm"
-                style={{ color: "var(--gold)", backgroundColor: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)" }}
-              >
-                ETHDenver 2026 &middot; Multi-chain &middot; AI-Native
-              </div>
-
               <h1
                 className={`${spaceMono.className} fade-in-up mb-6 text-4xl font-bold leading-tight lg:text-5xl xl:text-6xl`}
                 style={{ animationDelay: "100ms", color: "var(--text-primary)", letterSpacing: "0.02em" }}
