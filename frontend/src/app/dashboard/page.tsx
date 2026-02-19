@@ -78,10 +78,10 @@ export default function DashboardPage() {
               className={spaceMono.className}
               style={{ fontSize: 32, fontWeight: 700, color: "#F5ECD7", letterSpacing: "0.02em", margin: 0 }}
             >
-              Agents Dashboard
+              Agent Creation
             </h1>
             <p style={{ color: "#9A8060", fontSize: 14, marginTop: 6 }}>
-              Manage your autonomous AI agents
+              Create and configure new AI agents
             </p>
           </div>
           {isConnected && address && (

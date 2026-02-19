@@ -9,7 +9,7 @@ const NAV = [
     links: [
       { href: "/",            icon: "\u2B21", label: "Home" },
       { href: "/marketplace", icon: "\u25C8", label: "Marketplace" },
-      { href: "/dashboard",   icon: "\u25CE", label: "Agents Dashboard" },
+      { href: "/dashboard",   icon: "\u25CE", label: "Agent Creation" },
       { href: "/my-agents",   icon: "\u25C6", label: "My Agents" },
     ]
   },
