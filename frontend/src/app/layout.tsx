@@ -1,47 +1,41 @@
-import "./globals.css";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import dynamic from "next/dynamic";
-import { Providers } from "@/components/Providers";
-import CardNav from "@/components/CardNav";
+import type { Metadata } from "next"
+import "./globals.css"
+import dynamic from "next/dynamic"
+import { Providers } from "@/components/Providers"
 
-const DotGrid = dynamic(() => import("@/components/DotGrid"), { ssr: false });
-
-const inter = Inter({ subsets: ["latin"] });
+const CardNav = dynamic(() => import("@/components/CardNav"), { ssr: false })
+const DotGrid = dynamic(() => import("@/components/DotGrid"), { ssr: false })
 
 export const metadata: Metadata = {
   title: "AgentFi",
-  description: "The banking system for autonomous AI agents",
-};
+  description: "The Banking System for Autonomous AI Agents",
+}
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className} style={{ background: "#1A1208", margin: 0, padding: 0 }}>
-        <Providers>
-          <DotGrid
-            dotSize={4}
-            gap={28}
-            baseColor="#3D2E1A"
-            activeColor="#C9A84C"
-            proximity={120}
-            shockRadius={200}
-            shockStrength={4}
-            returnDuration={1.5}
-            style={{ position: "fixed", inset: 0, zIndex: 0 }}
-          />
-          <div style={{ position: "relative", zIndex: 1 }}>
+      <body style={{ margin: 0, padding: 0, background: "#1A1208", minHeight: "100vh" }}>
+        {/* Fixed dot grid background */}
+        <DotGrid
+          dotSize={4}
+          gap={28}
+          baseColor="#3D2E1A"
+          activeColor="#C9A84C"
+          proximity={120}
+          shockRadius={200}
+          shockStrength={4}
+          returnDuration={1.5}
+        />
+        {/* All content above the grid */}
+        <div style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
+          <Providers>
             <CardNav />
             <div style={{ paddingTop: 60 }}>
               {children}
             </div>
-          </div>
-        </Providers>
+          </Providers>
+        </div>
       </body>
     </html>
-  );
+  )
 }
