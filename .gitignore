@@ -27,6 +27,9 @@ agents/**/*.pyc
 agents/.mypy_cache/
 agents/.pytest_cache/
 
+# ─── Hedera ────────────────────────────────────────────────────────
+agents/hedera_token.json
+
 # ─── pnpm ───────────────────────────────────────────────────────────
 node_modules/
 .pnpm-store/
