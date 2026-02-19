@@ -107,10 +107,7 @@ export default function HomePage() {
         }}
       />
 
-      <main className={`${dmSans.className} relative min-h-screen`} style={{ background: "var(--bg-base)" }}>
-        {/* Grid background */}
-        <div className="grid-bg pointer-events-none fixed inset-0" />
-        <div className="scanline-overlay pointer-events-none fixed inset-0" />
+      <main className={`${dmSans.className} relative min-h-screen`}>
 
         {/* ── Section 1: Hero ── */}
         <section className="relative mx-auto flex min-h-screen max-w-7xl items-center px-6" style={{ paddingTop: "40px", paddingBottom: "80px" }}>
