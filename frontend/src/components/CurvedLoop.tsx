@@ -50,9 +50,7 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
   const text = marqueeText
 
   const totalText = textLength
-    ? Array(Math.ceil(3600 / textLength) + 4)
-        .fill(text)
-        .join('')
+    ? Array(Math.ceil(5000 / textLength) + 6).fill(text).join('')
     : text
 
   // Measure one repeat of the text on the path
@@ -79,16 +77,19 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
     let animationId: number
     let currentOffset = -spacing
 
+    if (textPathRef.current) {
+      textPathRef.current.setAttribute('startOffset', currentOffset + 'px')
+    }
+
     const step = () => {
-      if (!dragRef.current && textPathRef.current) {
-        const delta = dirRef.current === 'right' ? speed : -speed
-        currentOffset += delta
-
-        // Infinite wrap — reset seamlessly when crossing boundary
-        if (currentOffset <= -spacing) currentOffset += spacing
-        if (currentOffset > 0) currentOffset -= spacing
-
-        textPathRef.current.setAttribute('startOffset', currentOffset + 'px')
+      if (textPathRef.current) {
+        if (!dragRef.current) {
+          const delta = dirRef.current === 'right' ? speed : -speed
+          currentOffset += delta
+          if (currentOffset <= -spacing) currentOffset += spacing
+          if (currentOffset > 0) currentOffset -= spacing
+          textPathRef.current.setAttribute('startOffset', currentOffset + 'px')
+        }
       }
       animationId = requestAnimationFrame(step)
     }
