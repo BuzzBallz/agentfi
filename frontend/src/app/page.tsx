@@ -167,22 +167,22 @@ export default function HomePage() {
               <div style={{ width: "100%", marginTop: 24, overflow: "hidden" }}>
                 <CurvedLoop
                   marqueeText="✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ "
-                  speed={1.5}
-                  curveAmount={300}
+                  speed={0.4}
+                  curveAmount={900}
                   direction="left"
                   className="curved-text-gold"
                 />
                 <CurvedLoop
                   marqueeText="✦ Marketplace Agents ✦ Marketplace Agents ✦ Marketplace Agents ✦ "
-                  speed={2}
-                  curveAmount={350}
+                  speed={0.5}
+                  curveAmount={1000}
                   direction="right"
                   className="curved-text-gold"
                 />
                 <CurvedLoop
                   marqueeText="✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ "
-                  speed={1.2}
-                  curveAmount={280}
+                  speed={0.3}
+                  curveAmount={850}
                   direction="left"
                   className="curved-text-gold"
                 />
