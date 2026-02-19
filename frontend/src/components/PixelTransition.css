@@ -1,0 +1,37 @@
+.pixelated-image-card {
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  overflow: hidden;
+  display: block;
+}
+
+.pixelated-image-card__default,
+.pixelated-image-card__active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pixelated-image-card__active {
+  display: none;
+}
+
+.pixelated-image-card__pixels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.pixelated-image-card__pixel {
+  position: absolute;
+  display: none;
+}

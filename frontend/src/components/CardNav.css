@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap');
+
+.card-nav,
+.card-nav * {
+  font-family: 'DM Sans', sans-serif;
+}
+
+.card-nav-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.card-nav {
+  overflow: hidden;
+  border-bottom: 1px solid #3D2E1A;
+}
+
+.card-nav-top {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+}
+
+.hamburger-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.hamburger-line {
+  width: 24px;
+  height: 2px;
+  background: #C9A84C;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburger-menu.open .hamburger-line:first-child {
+  transform: translateY(4px) rotate(45deg);
+}
+
+.hamburger-menu.open .hamburger-line:last-child {
+  transform: translateY(-4px) rotate(-45deg);
+}
+
+.logo-container {
+  font-family: monospace;
+  font-size: 20px;
+  font-weight: bold;
+  color: #C9A84C;
+  letter-spacing: 0.05em;
+}
+
+.card-nav-content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 12px 32px 20px;
+}
+
+.nav-card {
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.nav-card-label {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 0;
+}
+
+.nav-card-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav-card-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  transition: opacity 0.2s;
+}
+
+.nav-card-link:hover {
+  opacity: 0.7;
+}
+
+.nav-card-link-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.card-nav-cta-button {
+  font-family: monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #5C4422;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.card-nav-cta-button:hover {
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .card-nav-content {
+    grid-template-columns: 1fr;
+  }
+}

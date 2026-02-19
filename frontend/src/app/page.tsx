@@ -1,104 +1,111 @@
-import Link from "next/link";
-import { Space_Mono, DM_Sans } from "next/font/google";
+"use client"
 
-const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
-const dmSans = DM_Sans({ subsets: ["latin"] });
+import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
+import { Space_Mono, DM_Sans } from "next/font/google"
+import PixelTransition from "@/components/PixelTransition"
+import GlareHover from "@/components/GlareHover"
+import { Button } from "@/components/ui/button"
 
-const TERMINAL_TEXT = `AgentFi v1.0.0
-Connecting to ADI Chain... ✓
-Loading agent registry... ✓
-Agent: Portfolio Analyzer
-Query: "Analyze my DeFi positions"
-Running on Hedera via Agent Kit...
-─────────────────────────────
-RESULT: High ETH concentration
-Risk Score: 7.2/10
-Recommendation: Rebalance →
-yield_optimizer executing...
-APY found: 12.4% (Aave v3)
-─────────────────────────────
-Payment: 0.01 ADI ✓ settled
-iNFT #0042 minted on 0G ✓`;
+const LogoCarousel = dynamic(() => import("@/components/LogoCarousel"), { ssr: false })
+const CurvedLoop = dynamic(() => import("@/components/CurvedLoop"), { ssr: false })
 
-const AGENTS = [
-  {
-    name: "Portfolio Analyzer",
-    description: "Analyzes DeFi portfolio composition and allocation risk",
-    price: "0.01",
-    capabilities: ["Portfolio Analysis", "Risk Detection", "Allocation Breakdown"],
-    category: "portfolio" as const,
-  },
-  {
-    name: "Yield Optimizer",
-    description: "Finds the highest risk-adjusted yields across DeFi protocols",
-    price: "0.015",
-    capabilities: ["Yield Scanning", "APY Comparison", "Protocol Rating"],
-    category: "yield" as const,
-  },
-  {
-    name: "Risk Scorer",
-    description: "Scores any token or portfolio on a 1-10 risk scale",
-    price: "0.008",
-    capabilities: ["Risk Scoring", "Volatility Analysis", "Liquidity Check"],
-    category: "risk" as const,
-  },
-];
+const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] })
+const dmSans = DM_Sans({ subsets: ["latin"] })
 
-const CATEGORY_STYLES = {
-  portfolio: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
-  yield: "bg-green-500/10 text-green-400 border-green-500/30",
-  risk: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-};
+const LINES = [
+  { text: "AgentFi v1.0.0", color: "#C9A84C" },
+  { text: "Connecting to ADI Chain... ✓", color: "#7A9E6E" },
+  { text: "Loading agent registry... ✓", color: "#7A9E6E" },
+  { text: 'Agent: Portfolio Analyzer', color: "#F5ECD7" },
+  { text: 'Query: "Analyze my DeFi positions"', color: "#9A8060" },
+  { text: "Running on Hedera via Agent Kit...", color: "#9A8060" },
+  { text: "─────────────────────", color: "#3D2E1A" },
+  { text: "RESULT: High ETH concentration", color: "#F5ECD7" },
+  { text: "Risk Score: 7.2/10", color: "#C47A5A" },
+  { text: "Recommendation: Rebalance →", color: "#F5ECD7" },
+  { text: "yield_optimizer executing...", color: "#9A8060" },
+  { text: "APY found: 12.4% (Aave v3)", color: "#7A9E6E" },
+  { text: "─────────────────────", color: "#3D2E1A" },
+  { text: "Payment: 0.01 ADI ✓ settled", color: "#7A9E6E" },
+  { text: "iNFT #0042 minted on 0G ✓", color: "#C9A84C" },
+]
 
 export default function HomePage() {
-  const charCount = TERMINAL_TEXT.length;
+  const [displayedLines, setDisplayedLines] = useState<{ text: string; color: string }[]>([])
+  const [currentLine, setCurrentLine] = useState(0)
+  const [currentChar, setCurrentChar] = useState(0)
+  const [currentText, setCurrentText] = useState("")
+
+  useEffect(() => {
+    if (currentLine >= LINES.length) return
+
+    const line = LINES[currentLine]
+
+    if (currentChar < line.text.length) {
+      const timeout = setTimeout(() => {
+        setCurrentText(prev => prev + line.text[currentChar])
+        setCurrentChar(prev => prev + 1)
+      }, 28)
+      return () => clearTimeout(timeout)
+    } else {
+      const timeout = setTimeout(() => {
+        setDisplayedLines(prev => [...prev, { text: line.text, color: line.color }])
+        setCurrentText("")
+        setCurrentChar(0)
+        setCurrentLine(prev => prev + 1)
+      }, 80)
+      return () => clearTimeout(timeout)
+    }
+  }, [currentLine, currentChar])
 
   return (
     <>
       <style
         dangerouslySetInnerHTML={{
           __html: `
+            :root {
+              --bg-base: #1A1208;
+              --bg-surface: #241A0E;
+              --bg-surface-hover: #2E2010;
+              --border: #3D2E1A;
+              --border-bright: #5C4422;
+              --gold: #C9A84C;
+              --gold-light: #E8C97A;
+              --gold-dim: #8A6E2E;
+              --text-primary: #F5ECD7;
+              --text-secondary: #9A8060;
+              --text-muted: #5C4A32;
+              --green-muted: #7A9E6E;
+              --terracotta: #C47A5A;
+            }
             @keyframes fadeInUp {
               from { opacity: 0; transform: translateY(24px); }
               to { opacity: 1; transform: translateY(0); }
             }
-            @keyframes typing {
-              from { max-height: 0; }
-              to { max-height: 600px; }
-            }
             @keyframes blink {
-              0%, 100% { opacity: 1; }
-              50% { opacity: 0; }
+              0%, 50% { opacity: 1; }
+              51%, 100% { opacity: 0; }
             }
             @keyframes scanline {
               0% { transform: translateY(-100%); }
               100% { transform: translateY(100vh); }
             }
             @keyframes glow {
-              0%, 100% { box-shadow: 0 0 20px rgba(0,212,255,0.15); }
-              50% { box-shadow: 0 0 40px rgba(0,212,255,0.3); }
+              0%, 100% { box-shadow: 0 0 20px rgba(201,168,76,0.15); }
+              50% { box-shadow: 0 0 40px rgba(201,168,76,0.3); }
             }
             .fade-in-up {
               opacity: 0;
               animation: fadeInUp 0.7s ease-out forwards;
-            }
-            .terminal-text {
-              overflow: hidden;
-              animation: typing 6s steps(${charCount}, end) infinite;
-              animation-delay: 0.5s;
-            }
-            .terminal-cursor::after {
-              content: "█";
-              animation: blink 1s step-end infinite;
-              color: #00D4FF;
             }
             .glow-card {
               animation: glow 3s ease-in-out infinite;
             }
             .grid-bg {
               background-image:
-                repeating-linear-gradient(0deg, rgba(0,212,255,0.03) 0px, rgba(0,212,255,0.03) 1px, transparent 1px, transparent 60px),
-                repeating-linear-gradient(90deg, rgba(0,212,255,0.03) 0px, rgba(0,212,255,0.03) 1px, transparent 1px, transparent 60px);
+                repeating-linear-gradient(0deg, rgba(201,168,76,0.04) 0px, rgba(201,168,76,0.04) 1px, transparent 1px, transparent 60px),
+                repeating-linear-gradient(90deg, rgba(201,168,76,0.04) 0px, rgba(201,168,76,0.04) 1px, transparent 1px, transparent 60px);
             }
             .scanline-overlay::before {
               content: "";
@@ -107,42 +114,37 @@ export default function HomePage() {
               left: 0;
               right: 0;
               height: 2px;
-              background: linear-gradient(90deg, transparent, rgba(0,212,255,0.08), transparent);
+              background: linear-gradient(90deg, transparent, rgba(201,168,76,0.08), transparent);
               animation: scanline 8s linear infinite;
               pointer-events: none;
             }
+            .cta-secondary { transition: all 0.2s; }
+            .cta-secondary:hover { background: rgba(201,168,76,0.1); }
           `,
         }}
       />
 
-      <main className={`${dmSans.className} relative min-h-screen`} style={{ backgroundColor: "#080C14" }}>
-        {/* Grid background */}
-        <div className="grid-bg pointer-events-none fixed inset-0" />
-        <div className="scanline-overlay pointer-events-none fixed inset-0" />
+      <main className={`${dmSans.className} relative min-h-screen`}>
 
         {/* ── Section 1: Hero ── */}
-        <section className="relative mx-auto flex min-h-screen max-w-7xl items-center px-6 py-20">
+        <section className="relative mx-auto flex min-h-screen max-w-7xl items-center px-6" style={{ paddingTop: "40px", paddingBottom: "80px" }}>
           <div className="grid w-full gap-12 lg:grid-cols-5">
             {/* Left */}
             <div className="flex flex-col justify-center lg:col-span-3">
-              <div className="fade-in-up mb-6 inline-block w-fit rounded-full border border-cyan-500/20 px-4 py-1.5 text-sm" style={{ color: "#00D4FF", backgroundColor: "rgba(0,212,255,0.06)" }}>
-                ETHDenver 2026 &middot; Multi-chain &middot; AI-Native
-              </div>
-
               <h1
-                className={`${spaceMono.className} fade-in-up mb-6 text-4xl font-bold leading-tight text-white lg:text-5xl xl:text-6xl`}
-                style={{ animationDelay: "100ms" }}
+                className={`${spaceMono.className} fade-in-up mb-6 text-4xl font-bold leading-tight lg:text-5xl xl:text-6xl`}
+                style={{ animationDelay: "100ms", color: "var(--text-primary)", letterSpacing: "0.02em" }}
               >
                 The Banking System
                 <br />
                 For Autonomous
                 <br />
-                <span style={{ color: "#00D4FF" }}>AI Agents</span>
+                <span style={{ color: "var(--gold)" }}>AI Agents</span>
               </h1>
 
               <p
-                className="fade-in-up mb-8 max-w-lg text-lg leading-relaxed text-gray-400"
-                style={{ animationDelay: "200ms" }}
+                className="fade-in-up mb-8 max-w-lg text-lg leading-relaxed"
+                style={{ animationDelay: "200ms", color: "var(--text-secondary)" }}
               >
                 Hire specialized AI agents. Pay on ADI Chain.
                 <br />
@@ -153,266 +155,109 @@ export default function HomePage() {
                 className="fade-in-up mb-8 flex gap-4"
                 style={{ animationDelay: "300ms" }}
               >
-                <Link
-                  href="/marketplace"
-                  className="rounded-lg px-6 py-3 font-medium text-black transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#00D4FF" }}
+                <PixelTransition
+                  gridSize={8}
+                  pixelColor="#C9A84C"
+                  animationStepDuration={0.25}
+                  aspectRatio="0%"
+                  style={{ width: 180, height: 44, borderRadius: 8, overflow: "hidden" }}
+                  firstContent={
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Button
+                        style={{ width: "100%", height: "100%", background: "#C9A84C", color: "#1A1208", fontFamily: "monospace", fontSize: 13, fontWeight: "bold", letterSpacing: "0.1em", borderRadius: 8, border: "none", cursor: "pointer" }}
+                        onClick={() => window.location.href = "/marketplace"}
+                      >
+                        Enter Marketplace
+                      </Button>
+                    </div>
+                  }
+                  secondContent={
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Button
+                        style={{ width: "100%", height: "100%", background: "#E8C97A", color: "#1A1208", fontFamily: "monospace", fontSize: 13, fontWeight: "bold", letterSpacing: "0.1em", borderRadius: 8, border: "none", cursor: "pointer" }}
+                        onClick={() => window.location.href = "/marketplace"}
+                      >
+                        Enter Marketplace
+                      </Button>
+                    </div>
+                  }
+                />
+                <GlareHover
+                  width="180px"
+                  height="44px"
+                  background="#241A0E"
+                  borderRadius="8px"
+                  borderColor="#5C4422"
+                  glareColor="#C9A84C"
+                  glareOpacity={0.25}
+                  glareAngle={-45}
+                  glareSize={250}
+                  transitionDuration={600}
                 >
-                  Enter Marketplace
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="rounded-lg border px-6 py-3 font-medium text-white transition-all hover:bg-white/5"
-                  style={{ borderColor: "rgba(0,212,255,0.3)" }}
-                >
-                  View Dashboard
-                </Link>
+                  <Button
+                    style={{ width: "100%", height: "100%", background: "transparent", color: "#C9A84C", fontFamily: "monospace", fontSize: 13, fontWeight: "bold", letterSpacing: "0.1em", border: "none", cursor: "pointer" }}
+                    onClick={() => window.location.href = "/dashboard"}
+                  >
+                    View Dashboard
+                  </Button>
+                </GlareHover>
               </div>
 
-              <div
-                className="fade-in-up flex gap-4"
-                style={{ animationDelay: "400ms" }}
-              >
-                {["$45,000 Prize Pool", "3 AI Agents", "Multi-Chain"].map(
-                  (stat) => (
-                    <span
-                      key={stat}
-                      className={`${spaceMono.className} rounded border border-gray-800 bg-gray-900/60 px-3 py-1.5 text-xs text-gray-400`}
-                    >
-                      {stat}
-                    </span>
-                  ),
-                )}
+              <div style={{ width: "100%", marginTop: 24, overflow: "hidden" }}>
+                <CurvedLoop marqueeText="✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ ETHDenver 2026 ✦ " speed={0.4} curveAmount={60} direction="left" className="curved-text-gold"/>
+                <CurvedLoop marqueeText="✦ Marketplace Agents ✦ Marketplace Agents ✦ Marketplace Agents ✦ " speed={0.5} curveAmount={80} direction="right" className="curved-text-gold"/>
+                <CurvedLoop marqueeText="✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ Multi-Chain ✦ " speed={0.3} curveAmount={50} direction="left" className="curved-text-gold"/>
               </div>
             </div>
 
             {/* Right — Terminal */}
             <div className="flex items-center lg:col-span-2">
-              <div className="glow-card w-full overflow-hidden rounded-xl border border-gray-800 bg-gray-950/80 backdrop-blur">
-                <div className="flex items-center gap-2 border-b border-gray-800 px-4 py-3">
-                  <span className="h-3 w-3 rounded-full bg-red-500/80" />
-                  <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
-                  <span className="h-3 w-3 rounded-full bg-green-500/80" />
-                  <span className={`${spaceMono.className} ml-2 text-xs text-gray-500`}>
+              <div
+                className="glow-card w-full overflow-hidden rounded-xl backdrop-blur"
+                style={{ background: "var(--bg-surface)", border: "1px solid var(--border-bright)" }}
+              >
+                <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid var(--border-bright)" }}>
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FF5F57" }} />
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FFBD2E" }} />
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#28CA41" }} />
+                  <span className={`${spaceMono.className} ml-2 text-xs`} style={{ color: "var(--text-muted)" }}>
                     agentfi-terminal
                   </span>
                 </div>
                 <div className="p-5">
-                  <pre
-                    className={`${spaceMono.className} terminal-text terminal-cursor whitespace-pre-wrap text-xs leading-relaxed`}
-                    style={{ color: "#00D4FF" }}
-                  >
-                    {TERMINAL_TEXT}
-                  </pre>
+                  <div style={{ fontFamily: "monospace", fontSize: 12, lineHeight: 1.8, display: "flex", flexDirection: "column", gap: 2 }}>
+                    {displayedLines.map((line, i) => (
+                      <div key={i} style={{ color: line.color }}>{line.text}</div>
+                    ))}
+                    {currentLine < LINES.length && (
+                      <div style={{ color: LINES[currentLine].color }}>
+                        {currentText}<span style={{ animation: "blink 1s infinite", color: "#C9A84C" }}>▋</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── Section 2: How It Works ── */}
-        <section className="relative mx-auto max-w-5xl px-6 py-24">
-          <h2
-            className={`${spaceMono.className} mb-16 text-center text-3xl font-bold text-white`}
-          >
-            How It Works
-          </h2>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            {[
-              {
-                step: "01",
-                title: "Browse Agents",
-                desc: "Find specialized AI agents in the marketplace — each with unique DeFi capabilities and transparent pricing.",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#00D4FF" strokeWidth="1.5" className="h-8 w-8">
-                    <path d="M12 2a8 8 0 0 1 8 8c0 2.5-1.2 4.8-3 6.2V18a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-1.8C5.2 14.8 4 12.5 4 10a8 8 0 0 1 8-8z" />
-                    <path d="M10 22h4M12 2v2M9 18h6" />
-                  </svg>
-                ),
-              },
-              {
-                step: "02",
-                title: "Pay on ADI Chain",
-                desc: "Compliant cross-border payment settled instantly. FATF Travel Rule enforcement built into every transaction.",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.5" className="h-8 w-8">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                  </svg>
-                ),
-              },
-              {
-                step: "03",
-                title: "Own as iNFT",
-                desc: "Your agent is minted as an ERC-7857 iNFT on 0G Chain. Transfer the NFT, transfer the AI.",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="1.5" className="h-8 w-8">
-                    <polygon points="12,2 20,7 20,17 12,22 4,17 4,7" />
-                    <polygon points="12,6 16,9 16,15 12,18 8,15 8,9" />
-                  </svg>
-                ),
-              },
-            ].map((item, i) => (
-              <div key={item.step} className="relative text-center">
-                {i < 2 && (
-                  <div className="absolute right-0 top-12 hidden h-px w-8 translate-x-full md:block" style={{ backgroundColor: "rgba(0,212,255,0.2)" }} />
-                )}
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-xl border border-gray-800 bg-gray-900/60">
-                  {item.icon}
-                </div>
-                <span className={`${spaceMono.className} mb-2 block text-xs`} style={{ color: "#00D4FF" }}>
-                  STEP {item.step}
-                </span>
-                <h3 className={`${spaceMono.className} mb-2 text-lg font-bold text-white`}>
-                  {item.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-gray-400">
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Section 3: Agent Cards ── */}
-        <section className="relative mx-auto max-w-6xl px-6 py-24">
-          <h2 className={`${spaceMono.className} mb-4 text-center text-3xl font-bold text-white`}>
-            Meet the Agents
-          </h2>
-          <p className="mb-12 text-center text-gray-400">
-            Three specialized AI agents ready to analyze, optimize, and score your DeFi strategy.
-          </p>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {AGENTS.map((agent) => (
-              <div
-                key={agent.name}
-                className="group rounded-xl border border-gray-800 bg-gray-900/40 p-6 transition-all hover:border-gray-600 hover:bg-gray-900/70"
+        {/* ── Section 2: Multi-Chain by Design ── */}
+        <section className="px-6 py-20" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="mx-auto flex max-w-5xl flex-col items-center gap-12">
+            <div className="text-center">
+              <h2
+                className={`${spaceMono.className} mb-3 text-3xl font-bold`}
+                style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}
               >
-                <div className="mb-4 flex items-start justify-between">
-                  <span className={`rounded-full border px-2.5 py-1 text-xs ${CATEGORY_STYLES[agent.category]}`}>
-                    {agent.category}
-                  </span>
-                  <span className={`${spaceMono.className} text-sm font-bold`} style={{ color: "#F59E0B" }}>
-                    {agent.price} ADI
-                  </span>
-                </div>
-                <h3 className={`${spaceMono.className} mb-2 text-lg font-bold text-white`}>
-                  {agent.name}
-                </h3>
-                <p className="mb-4 text-sm leading-relaxed text-gray-400">
-                  {agent.description}
-                </p>
-                <div className="mb-5 flex flex-wrap gap-2">
-                  {agent.capabilities.map((cap) => (
-                    <span
-                      key={cap}
-                      className="rounded bg-gray-800/80 px-2 py-1 text-xs text-gray-300"
-                    >
-                      {cap}
-                    </span>
-                  ))}
-                </div>
-                <Link
-                  href="/marketplace"
-                  className={`${spaceMono.className} inline-flex items-center gap-1 text-sm transition-colors hover:opacity-80`}
-                  style={{ color: "#00D4FF" }}
-                >
-                  Hire Agent
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                  </svg>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Section 4: Chain Architecture ── */}
-        <section className="relative mx-auto max-w-5xl px-6 py-24">
-          <h2 className={`${spaceMono.className} mb-4 text-center text-3xl font-bold text-white`}>
-            Multi-Chain by Design
-          </h2>
-          <p className="mb-12 text-center text-gray-400">
-            Three chains. One seamless experience. Each chain does what it does best.
-          </p>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                color: "#00D4FF",
-                name: "0G Chain",
-                role: "Agent Ownership",
-                desc: "iNFT ERC-7857 standard. Each agent lives on-chain. Transfer the NFT, transfer the AI.",
-                detail: "ChainId: 16600",
-              },
-              {
-                color: "#F59E0B",
-                name: "ADI Chain",
-                role: "Compliant Payments",
-                desc: "Institutional-grade L2. FATF Travel Rule compliant. Pay agents cross-border in ADI.",
-                detail: "ChainId: 99999",
-              },
-              {
-                color: "#A855F7",
-                name: "Hedera",
-                role: "Agent Execution",
-                desc: "Hedera Agent Kit powers AI orchestration. Fast, low-cost microtransactions per agent call.",
-                detail: "Testnet",
-              },
-            ].map((chain) => (
-              <div
-                key={chain.name}
-                className="rounded-xl border border-gray-800 bg-gray-900/40 p-6"
-              >
-                <div className="mb-4 flex items-center gap-3">
-                  <div
-                    className="h-4 w-4 rounded-full"
-                    style={{ backgroundColor: chain.color, boxShadow: `0 0 12px ${chain.color}40` }}
-                  />
-                  <h3 className={`${spaceMono.className} font-bold text-white`}>
-                    {chain.name}
-                  </h3>
-                </div>
-                <span
-                  className={`${spaceMono.className} mb-3 block text-xs font-bold`}
-                  style={{ color: chain.color }}
-                >
-                  {chain.role}
-                </span>
-                <p className="mb-3 text-sm leading-relaxed text-gray-400">
-                  {chain.desc}
-                </p>
-                <span className={`${spaceMono.className} text-xs text-gray-600`}>
-                  {chain.detail}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Section 5: Footer ── */}
-        <footer className="border-t border-gray-800/60 px-6 py-8">
-          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 md:flex-row">
-            <span className={`${spaceMono.className} text-xs text-gray-600`}>
-              AgentFi &middot; ETHDenver 2026
-            </span>
-            <div className="flex gap-6 text-sm text-gray-500">
-              <Link href="/marketplace" className="transition-colors hover:text-white">
-                Marketplace
-              </Link>
-              <Link href="/dashboard" className="transition-colors hover:text-white">
-                Dashboard
-              </Link>
-              <Link href="/my-agents" className="transition-colors hover:text-white">
-                My Agents
-              </Link>
+                Multi-Chain by Design
+              </h2>
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                Each chain plays a specific role in the agent economy
+              </p>
             </div>
-            <span className={`${spaceMono.className} text-xs text-gray-600`}>
-              Built on 0G &middot; ADI &middot; Hedera
-            </span>
+            <LogoCarousel />
           </div>
-        </footer>
+        </section>
       </main>
     </>
   );
