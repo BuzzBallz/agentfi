@@ -1,33 +1,62 @@
-import dynamic from "next/dynamic";
-import { Space_Mono, DM_Sans } from "next/font/google";
-import PixelTransition from "@/components/PixelTransition";
-import GlareHover from "@/components/GlareHover";
+"use client"
 
-const LogoCarousel = dynamic(() => import("@/components/LogoCarousel"), { ssr: false });
-const CurvedLoop = dynamic(() => import("@/components/CurvedLoop"), { ssr: false });
+import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
+import { Space_Mono, DM_Sans } from "next/font/google"
+import PixelTransition from "@/components/PixelTransition"
+import GlareHover from "@/components/GlareHover"
 
-const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
-const dmSans = DM_Sans({ subsets: ["latin"] });
+const LogoCarousel = dynamic(() => import("@/components/LogoCarousel"), { ssr: false })
+const CurvedLoop = dynamic(() => import("@/components/CurvedLoop"), { ssr: false })
 
-const TERMINAL_TEXT = `AgentFi v1.0.0
-Connecting to ADI Chain... ✓
-Loading agent registry... ✓
-Agent: Portfolio Analyzer
-Query: "Analyze my DeFi positions"
-Running on Hedera via Agent Kit...
-─────────────────────────────
-RESULT: High ETH concentration
-Risk Score: 7.2/10
-Recommendation: Rebalance →
-yield_optimizer executing...
-APY found: 12.4% (Aave v3)
-─────────────────────────────
-Payment: 0.01 ADI ✓ settled
-iNFT #0042 minted on 0G ✓`;
+const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] })
+const dmSans = DM_Sans({ subsets: ["latin"] })
 
+const LINES = [
+  { text: "AgentFi v1.0.0", color: "#C9A84C" },
+  { text: "Connecting to ADI Chain... ✓", color: "#7A9E6E" },
+  { text: "Loading agent registry... ✓", color: "#7A9E6E" },
+  { text: 'Agent: Portfolio Analyzer', color: "#F5ECD7" },
+  { text: 'Query: "Analyze my DeFi positions"', color: "#9A8060" },
+  { text: "Running on Hedera via Agent Kit...", color: "#9A8060" },
+  { text: "─────────────────────", color: "#3D2E1A" },
+  { text: "RESULT: High ETH concentration", color: "#F5ECD7" },
+  { text: "Risk Score: 7.2/10", color: "#C47A5A" },
+  { text: "Recommendation: Rebalance →", color: "#F5ECD7" },
+  { text: "yield_optimizer executing...", color: "#9A8060" },
+  { text: "APY found: 12.4% (Aave v3)", color: "#7A9E6E" },
+  { text: "─────────────────────", color: "#3D2E1A" },
+  { text: "Payment: 0.01 ADI ✓ settled", color: "#7A9E6E" },
+  { text: "iNFT #0042 minted on 0G ✓", color: "#C9A84C" },
+]
 
 export default function HomePage() {
-  const charCount = TERMINAL_TEXT.length;
+  const [displayedLines, setDisplayedLines] = useState<{ text: string; color: string }[]>([])
+  const [currentLine, setCurrentLine] = useState(0)
+  const [currentChar, setCurrentChar] = useState(0)
+  const [currentText, setCurrentText] = useState("")
+
+  useEffect(() => {
+    if (currentLine >= LINES.length) return
+
+    const line = LINES[currentLine]
+
+    if (currentChar < line.text.length) {
+      const timeout = setTimeout(() => {
+        setCurrentText(prev => prev + line.text[currentChar])
+        setCurrentChar(prev => prev + 1)
+      }, 28)
+      return () => clearTimeout(timeout)
+    } else {
+      const timeout = setTimeout(() => {
+        setDisplayedLines(prev => [...prev, { text: line.text, color: line.color }])
+        setCurrentText("")
+        setCurrentChar(0)
+        setCurrentLine(prev => prev + 1)
+      }, 80)
+      return () => clearTimeout(timeout)
+    }
+  }, [currentLine, currentChar])
 
   return (
     <>
@@ -53,13 +82,9 @@ export default function HomePage() {
               from { opacity: 0; transform: translateY(24px); }
               to { opacity: 1; transform: translateY(0); }
             }
-            @keyframes typing {
-              from { max-height: 0; }
-              to { max-height: 600px; }
-            }
             @keyframes blink {
-              0%, 100% { opacity: 1; }
-              50% { opacity: 0; }
+              0%, 50% { opacity: 1; }
+              51%, 100% { opacity: 0; }
             }
             @keyframes scanline {
               0% { transform: translateY(-100%); }
@@ -72,16 +97,6 @@ export default function HomePage() {
             .fade-in-up {
               opacity: 0;
               animation: fadeInUp 0.7s ease-out forwards;
-            }
-            .terminal-text {
-              overflow: hidden;
-              animation: typing 6s steps(${charCount}, end) infinite;
-              animation-delay: 0.5s;
-            }
-            .terminal-cursor::after {
-              content: "█";
-              animation: blink 1s step-end infinite;
-              color: var(--gold);
             }
             .glow-card {
               animation: glow 3s ease-in-out infinite;
@@ -238,20 +253,24 @@ export default function HomePage() {
                 style={{ background: "var(--bg-surface)", border: "1px solid var(--border-bright)" }}
               >
                 <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid var(--border-bright)" }}>
-                  <span className="h-3 w-3 rounded-full" style={{ background: "#5C4A32" }} />
-                  <span className="h-3 w-3 rounded-full" style={{ background: "#8A6E2E" }} />
-                  <span className="h-3 w-3 rounded-full" style={{ background: "#C9A84C" }} />
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FF5F57" }} />
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FFBD2E" }} />
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#28CA41" }} />
                   <span className={`${spaceMono.className} ml-2 text-xs`} style={{ color: "var(--text-muted)" }}>
                     agentfi-terminal
                   </span>
                 </div>
                 <div className="p-5">
-                  <pre
-                    className={`${spaceMono.className} terminal-text terminal-cursor whitespace-pre-wrap text-xs leading-relaxed`}
-                    style={{ color: "var(--gold)" }}
-                  >
-                    {TERMINAL_TEXT}
-                  </pre>
+                  <div style={{ fontFamily: "monospace", fontSize: 12, lineHeight: 1.8, display: "flex", flexDirection: "column", gap: 2 }}>
+                    {displayedLines.map((line, i) => (
+                      <div key={i} style={{ color: line.color }}>{line.text}</div>
+                    ))}
+                    {currentLine < LINES.length && (
+                      <div style={{ color: LINES[currentLine].color }}>
+                        {currentText}<span style={{ animation: "blink 1s infinite", color: "#C9A84C" }}>▋</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
