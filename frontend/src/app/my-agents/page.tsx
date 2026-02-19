@@ -1,153 +1,32 @@
 "use client"
-import { useEffect, useState } from "react"
-import dynamic from "next/dynamic"
+import { useState } from "react"
 import GlareHover from "@/components/GlareHover"
-
-const CircularGallery = dynamic(() => import("@/components/CircularGallery"), { ssr: false })
+import PixelTransition from "@/components/PixelTransition"
 
 const AGENTS = [
-  {
-    id: "#0042",
-    name: "Portfolio Analyzer",
-    model: "gpt-4o-mini",
-    capabilities: "DeFi Analysis",
-    minted: "Feb 18, 2026",
-    queries: "47",
-    earned: "0.012 ADI",
-    chain: "0G Chain",
-    status: "ACTIVE",
-  },
-  {
-    id: "#0043",
-    name: "Yield Optimizer",
-    model: "gpt-4o-mini",
-    capabilities: "Yield Farming",
-    minted: "Feb 18, 2026",
-    queries: "31",
-    earned: "0.009 ADI",
-    chain: "0G Chain",
-    status: "ACTIVE",
-  },
-  {
-    id: "#0044",
-    name: "Risk Scorer",
-    model: "gpt-4o-mini",
-    capabilities: "Risk Assessment",
-    minted: "Feb 18, 2026",
-    queries: "89",
-    earned: "0.010 ADI",
-    chain: "0G Chain",
-    status: "IDLE",
-  },
+  { id: "#0042", name: "Portfolio Analyzer", model: "gpt-4o-mini", capabilities: "DeFi Analysis", minted: "Feb 18, 2026", queries: "47", earned: "0.012 ADI", chain: "0G Chain", status: "ACTIVE" },
+  { id: "#0043", name: "Yield Optimizer", model: "gpt-4o-mini", capabilities: "Yield Farming", minted: "Feb 18, 2026", queries: "31", earned: "0.009 ADI", chain: "0G Chain", status: "ACTIVE" },
+  { id: "#0044", name: "Risk Scorer", model: "gpt-4o-mini", capabilities: "Risk Assessment", minted: "Feb 18, 2026", queries: "89", earned: "0.010 ADI", chain: "0G Chain", status: "IDLE" },
 ]
 
-function generateAgentCard(agent: typeof AGENTS[0]): string {
-  const canvas = document.createElement("canvas")
-  canvas.width = 800
-  canvas.height = 600
-  const ctx = canvas.getContext("2d")!
-
-  // Background
-  ctx.fillStyle = "#241A0E"
-  ctx.fillRect(0, 0, 800, 600)
-
-  // Border
-  ctx.strokeStyle = "#3D2E1A"
-  ctx.lineWidth = 2
-  ctx.strokeRect(1, 1, 798, 598)
-
-  // Gold top accent line
-  ctx.fillStyle = "#C9A84C"
-  ctx.fillRect(0, 0, 800, 4)
-
-  // iNFT ID badge
-  ctx.fillStyle = "#1A1208"
-  ;(ctx as unknown as { roundRect: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect(40, 40, 120, 36, 6)
-  ctx.fill()
-  ctx.strokeStyle = "#5C4422"
-  ctx.lineWidth = 1
-  ;(ctx as unknown as { roundRect: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect(40, 40, 120, 36, 6)
-  ctx.stroke()
-  ctx.fillStyle = "#C9A84C"
-  ctx.font = "bold 16px monospace"
-  ctx.textAlign = "left"
-  ctx.fillText(agent.id, 56, 64)
-
-  // Status badge
-  const statusColor = agent.status === "ACTIVE" ? "#7A9E6E" : "#5C4A32"
-  ctx.fillStyle = statusColor
-  ctx.font = "bold 13px monospace"
-  ctx.fillText("\u25CF " + agent.status, 600, 64)
-
-  // Agent name
-  ctx.fillStyle = "#F5ECD7"
-  ctx.font = "bold 36px monospace"
-  ctx.textAlign = "left"
-  ctx.fillText(agent.name, 40, 150)
-
-  // Subtitle
-  ctx.fillStyle = "#9A8060"
-  ctx.font = "14px monospace"
-  ctx.fillText("ERC-7857 \u00B7 " + agent.chain, 40, 180)
-
-  // Divider
-  ctx.fillStyle = "#3D2E1A"
-  ctx.fillRect(40, 210, 720, 1)
-
-  // Metadata grid
-  const fields = [
-    { label: "MODEL", value: agent.model },
-    { label: "CAPABILITIES", value: agent.capabilities },
-    { label: "MINTED", value: agent.minted },
-    { label: "CHAIN", value: agent.chain },
-    { label: "QUERIES RUN", value: agent.queries },
-    { label: "ADI EARNED", value: agent.earned },
-  ]
-
-  fields.forEach((field, i) => {
-    const col = i % 2
-    const row = Math.floor(i / 2)
-    const x = 40 + col * 380
-    const y = 250 + row * 80
-
-    ctx.fillStyle = "#5C4A32"
-    ctx.font = "11px monospace"
-    ctx.fillText(field.label, x, y)
-
-    ctx.fillStyle = "#F5ECD7"
-    ctx.font = "bold 15px monospace"
-    ctx.fillText(field.value, x, y + 24)
-  })
-
-  // Bottom gold line
-  ctx.fillStyle = "#C9A84C"
-  ctx.fillRect(40, 540, 200, 2)
-
-  ctx.fillStyle = "#9A8060"
-  ctx.font = "12px monospace"
-  ctx.fillText("AgentFi \u00B7 Powered by 0G Chain + Hedera", 40, 570)
-
-  return canvas.toDataURL("image/png")
-}
-
 export default function MyAgentsPage() {
-  const [galleryItems, setGalleryItems] = useState<{ image: string; text: string }[]>([])
+  const [active, setActive] = useState(0)
 
-  useEffect(() => {
-    const items = AGENTS.map(agent => ({
-      image: generateAgentCard(agent),
-      text: agent.name,
-    }))
-    setGalleryItems(items)
-  }, [])
+  const prev = () => setActive(i => (i - 1 + AGENTS.length) % AGENTS.length)
+  const next = () => setActive(i => (i + 1) % AGENTS.length)
+
+  const agent = AGENTS[active]
 
   return (
     <main style={{ minHeight: "100vh", padding: "32px 48px", position: "relative", zIndex: 1 }}>
+
+      {/* Title */}
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontFamily: "monospace", fontSize: 28, color: "#F5ECD7", margin: 0, letterSpacing: "0.02em" }}>My Agents</h1>
         <p style={{ color: "#9A8060", fontSize: 14, marginTop: 8 }}>Your iNFT collection on 0G Chain</p>
       </div>
 
+      {/* Wallet Summary */}
       <div style={{ background: "#241A0E", border: "1px solid #3D2E1A", borderRadius: 12, padding: 20, marginBottom: 40, display: "flex", gap: 32, alignItems: "center" }}>
         {[
           { label: "3 iNFTs Owned", color: "#F5ECD7" },
@@ -160,19 +39,83 @@ export default function MyAgentsPage() {
         ))}
       </div>
 
-      {galleryItems.length > 0 && (
-        <div style={{ width: "100%", height: 500, marginBottom: 48, borderRadius: 16, overflow: "hidden", border: "1px solid #3D2E1A" }}>
-          <CircularGallery
-            items={galleryItems}
-            bend={3}
-            textColor="#C9A84C"
-            borderRadius={0.05}
-            font="bold 24px monospace"
-            scrollSpeed={2}
-            scrollEase={0.05}
-          />
+      {/* iNFT Carousel */}
+      <div style={{ marginBottom: 48 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+
+          {/* Prev arrow */}
+          <button onClick={prev} style={{ background: "#241A0E", border: "1px solid #3D2E1A", borderRadius: "50%", width: 44, height: 44, color: "#C9A84C", fontSize: 20, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.2s" }}
+            onMouseOver={e => (e.currentTarget.style.borderColor = "#C9A84C")}
+            onMouseOut={e => (e.currentTarget.style.borderColor = "#3D2E1A")}
+          >{"\u2039"}</button>
+
+          {/* Active card — large center */}
+          <div style={{ flex: 1, background: "#241A0E", border: "1px solid #5C4422", borderRadius: 16, padding: 36, position: "relative", overflow: "hidden" }}>
+            {/* Gold top bar */}
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "#C9A84C" }} />
+
+            {/* Top row */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ background: "#1A1208", border: "1px solid #5C4422", borderRadius: 6, padding: "4px 14px", fontFamily: "monospace", fontSize: 13, color: "#C9A84C" }}>
+                {agent.id}
+              </div>
+              <span style={{ fontFamily: "monospace", fontSize: 12, color: agent.status === "ACTIVE" ? "#7A9E6E" : "#5C4A32" }}>
+                {"\u25CF"} {agent.status}
+              </span>
+            </div>
+
+            {/* Name */}
+            <h2 style={{ fontFamily: "monospace", color: "#F5ECD7", fontSize: 26, margin: "0 0 6px", letterSpacing: "0.02em" }}>{agent.name}</h2>
+            <p style={{ color: "#9A8060", fontSize: 13, margin: "0 0 24px", fontFamily: "monospace" }}>ERC-7857 {"\u00B7"} {agent.chain}</p>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: "#3D2E1A", marginBottom: 24 }} />
+
+            {/* Metadata 2-col grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 32px", marginBottom: 28 }}>
+              {[
+                { label: "MODEL", value: agent.model },
+                { label: "CAPABILITIES", value: agent.capabilities },
+                { label: "MINTED", value: agent.minted },
+                { label: "CHAIN", value: agent.chain },
+                { label: "QUERIES RUN", value: agent.queries },
+                { label: "ADI EARNED", value: agent.earned },
+              ].map(f => (
+                <div key={f.label}>
+                  <p style={{ color: "#5C4A32", fontFamily: "monospace", fontSize: 10, letterSpacing: "0.15em", margin: "0 0 4px" }}>{f.label}</p>
+                  <p style={{ color: "#F5ECD7", fontFamily: "monospace", fontSize: 15, margin: 0, fontWeight: "bold" }}>{f.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: 12 }}>
+              <PixelTransition
+                gridSize={6} pixelColor="#C9A84C" animationStepDuration={0.2} aspectRatio="0%"
+                style={{ width: 130, height: 38, borderRadius: 8, overflow: "hidden" }}
+                firstContent={<div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#C9A84C", color: "#1A1208", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Execute</div>}
+                secondContent={<div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#E8C97A", color: "#1A1208", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Execute</div>}
+              />
+              <GlareHover width="130px" height="38px" background="#1A1208" borderRadius="8px" borderColor="#5C4422" glareColor="#C9A84C" glareOpacity={0.2} transitionDuration={500}>
+                <span style={{ color: "#C9A84C", fontFamily: "monospace", fontSize: 12, fontWeight: "bold", letterSpacing: "0.08em" }}>Transfer {"\u2192"}</span>
+              </GlareHover>
+            </div>
+          </div>
+
+          {/* Next arrow */}
+          <button onClick={next} style={{ background: "#241A0E", border: "1px solid #3D2E1A", borderRadius: "50%", width: 44, height: 44, color: "#C9A84C", fontSize: 20, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.2s" }}
+            onMouseOver={e => (e.currentTarget.style.borderColor = "#C9A84C")}
+            onMouseOut={e => (e.currentTarget.style.borderColor = "#3D2E1A")}
+          >{"\u203A"}</button>
         </div>
-      )}
+
+        {/* Dot indicators */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 20 }}>
+          {AGENTS.map((_, i) => (
+            <button key={i} onClick={() => setActive(i)} style={{ width: 8, height: 8, borderRadius: "50%", border: "none", cursor: "pointer", background: i === active ? "#C9A84C" : "#3D2E1A", transform: i === active ? "scale(1.3)" : "scale(1)", transition: "all 0.2s" }} />
+          ))}
+        </div>
+      </div>
 
       {/* Activity timeline */}
       <div style={{ marginBottom: 40 }}>
@@ -197,6 +140,7 @@ export default function MyAgentsPage() {
         </div>
       </div>
 
+      {/* CTA Banner */}
       <div style={{ background: "#2E2010", border: "1px solid #5C4422", borderRadius: 12, padding: 28, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h3 style={{ fontFamily: "monospace", color: "#F5ECD7", fontSize: 18, margin: "0 0 8px" }}>Expand your fleet</h3>
@@ -206,6 +150,7 @@ export default function MyAgentsPage() {
           <a href="/marketplace" style={{ color: "#C9A84C", fontFamily: "monospace", fontSize: 13, fontWeight: "bold", textDecoration: "none", letterSpacing: "0.1em" }}>Browse Marketplace {"\u2192"}</a>
         </GlareHover>
       </div>
+
     </main>
   )
 }
