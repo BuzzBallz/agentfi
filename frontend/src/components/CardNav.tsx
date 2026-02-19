@@ -5,6 +5,8 @@ import { gsap } from "gsap"
 import { GoArrowUpRight } from "react-icons/go"
 import "./CardNav.css"
 import WalletConnect from "./WalletConnect"
+import SplitText from "./SplitText"
+import FadeContent from "./FadeContent"
 
 const NAV_ITEMS = [
   {
@@ -119,21 +121,32 @@ const CardNav: React.FC = () => {
                 border: "1px solid #3D2E1A",
               }}
             >
-              <div className="nav-card-label" style={{ color: "#C9A84C" }}>
-                {item.label}
+              <div className="nav-card-label" style={{ color: "#C9A84C", marginBottom: 16 }}>
+                {isExpanded && (
+                  <SplitText
+                    text={item.label}
+                    tag="span"
+                    delay={40}
+                    duration={0.5}
+                    ease="power3.out"
+                    from={{ opacity: 0, y: 15 }}
+                    to={{ opacity: 1, y: 0 }}
+                  />
+                )}
               </div>
               <div className="nav-card-links">
-                {item.links.map((lnk) => (
-                  <a
-                    key={lnk.label}
-                    className="nav-card-link"
-                    href={lnk.href}
-                    aria-label={lnk.ariaLabel}
-                    style={{ color: "#F5ECD7" }}
-                  >
-                    <GoArrowUpRight className="nav-card-link-icon" aria-hidden="true" />
-                    {lnk.label}
-                  </a>
+                {item.links.map((lnk, i) => (
+                  <FadeContent key={lnk.label} delay={100 + i * 80} duration={300} blur>
+                    <a
+                      className="nav-card-link"
+                      href={lnk.href}
+                      aria-label={lnk.ariaLabel}
+                      style={{ color: "#F5ECD7" }}
+                    >
+                      <GoArrowUpRight className="nav-card-link-icon" aria-hidden="true" />
+                      {lnk.label}
+                    </a>
+                  </FadeContent>
                 ))}
               </div>
             </div>
