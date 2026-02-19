@@ -9,7 +9,7 @@ from typing import Any
 import uvicorn
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parent / ".env")  # Must run before orchestrator import (reads HEDERA_ENABLED)
+load_dotenv(Path(__file__).resolve().parent / ".env", override=True)  # Must run before orchestrator import (reads HEDERA_ENABLED)
 
 from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
