@@ -24,10 +24,10 @@
 }
 
 .magic-bento-card--border-glow {
-  border: 1px solid rgba(201, 168, 76, calc(var(--glow-intensity, 0) * 0.8));
+  border: 1px solid rgba(201, 168, 76, calc(var(--glow-intensity, 0) * 0.4));
   background: radial-gradient(
     circle at var(--glow-x, 50%) var(--glow-y, 50%),
-    rgba(201, 168, 76, calc(var(--glow-intensity, 0) * 0.08)) 0%,
+    rgba(201, 168, 76, calc(var(--glow-intensity, 0) * 0.03)) 0%,
     transparent 60%
   ), #241A0E;
 }

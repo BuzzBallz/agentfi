@@ -74,7 +74,7 @@ function generateStars(count: number): Star[] {
     x: Math.random() * 100,
     y: Math.random() * 100,
     size: Math.random() * 2 + 1,
-    opacity: Math.random() * 0.6 + 0.2,
+    opacity: Math.random() * 0.3 + 0.1,
     duration: Math.random() * 3 + 2,
     delay: Math.random() * 2,
   }))
@@ -135,7 +135,7 @@ const BentoCard: React.FC<CardInternalProps> = ({
       if (enableSpotlight) {
         el.style.setProperty(
           "--spotlight",
-          `radial-gradient(circle ${spotlightRadius}px at ${px}% ${py}%, rgba(${glowColor}, 0.12) 0%, transparent 100%)`
+          `radial-gradient(circle ${spotlightRadius}px at ${px}% ${py}%, rgba(${glowColor}, 0.06) 0%, transparent 100%)`
         )
       }
 
@@ -224,7 +224,7 @@ const BentoCard: React.FC<CardInternalProps> = ({
             position: "absolute",
             inset: 0,
             borderRadius: 16,
-            background: `radial-gradient(circle, rgba(${glowColor}, 0.25) 0%, transparent 70%)`,
+            background: `radial-gradient(circle, rgba(${glowColor}, 0.12) 0%, transparent 70%)`,
             animation: "clickPulse 0.4s ease-out forwards",
             pointerEvents: "none",
           }}
@@ -285,8 +285,8 @@ const MagicBento: React.FC<MagicBentoProps> = ({
       {/* Keyframe animations injected inline */}
       <style>{`
         @keyframes floatStar {
-          0%   { transform: translateY(0) scale(1);   opacity: 0.3; }
-          100% { transform: translateY(-8px) scale(1.3); opacity: 0.8; }
+          0%   { transform: translateY(0) scale(1);   opacity: 0.15; }
+          100% { transform: translateY(-8px) scale(1.3); opacity: 0.4; }
         }
         @keyframes clickPulse {
           0%   { transform: scale(0.8); opacity: 1; }
