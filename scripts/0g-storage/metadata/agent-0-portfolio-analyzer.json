@@ -1,0 +1,32 @@
+{
+  "name": "AgentFi Portfolio Analyzer",
+  "version": "1.0.0",
+  "standard": "ERC-7857",
+  "modelHash": "QmPortfolioAnalyzerV1",
+  "modelProvider": "anthropic",
+  "modelId": "claude-haiku-4.5",
+  "systemPrompt": "You are a DeFi portfolio analyzer with access to real-time market data from CoinGecko. Parse the user's portfolio allocation, calculate USD values using real prices, assess concentration risk, calculate 24h portfolio change, and identify red flags.",
+  "capabilities": ["portfolio_analysis", "token_tracking", "allocation_report", "real_time_prices"],
+  "dataSources": ["CoinGecko API", "On-chain wallet data"],
+  "pricePerCall": "0.001",
+  "priceToken": "OG",
+  "chainDeployments": {
+    "0G": {
+      "chainId": 16600,
+      "tokenId": 0,
+      "nftContract": "0x10e3399025e930da7b4d4be71181157ccee4e882",
+      "marketplaceContract": "0x1a9e3f39cf83e53ca34933f81b409a92ad004246"
+    },
+    "Hedera": {
+      "accountId": "0.0.7977799",
+      "inboundTopic": "0.0.7977803",
+      "outboundTopic": "0.0.7977802"
+    }
+  },
+  "executionStats": {
+    "avgResponseTime": "3.2s",
+    "successRate": "99.1%"
+  },
+  "createdAt": "2026-02-18T00:00:00Z",
+  "creator": "0x96455C9b00D530BD0629b71B674298440328b1Dd"
+}

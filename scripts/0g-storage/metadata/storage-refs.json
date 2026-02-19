@@ -1,0 +1,10 @@
+{
+  "network": "0g-galileo-testnet",
+  "status": "roots_computed_upload_pending",
+  "note": "On-chain submission blocked by testnet Market proxy issue. Re-run upload-metadata.js when fixed.",
+  "agents": [
+    { "tokenId": 0, "name": "Portfolio Analyzer", "rootHash": "0x0e14bbafc93a89c4fea4b2cec4df6e563426c7adf38962dd6c9662ed005eb06b", "metadataFile": "agent-0-portfolio-analyzer.json" },
+    { "tokenId": 1, "name": "Yield Optimizer", "rootHash": "0x5ad0ccfbb4b1def71c82ed71b242b87c14edcf4cd9eee7ed82f6a119cae6c2b7", "metadataFile": "agent-1-yield-optimizer.json" },
+    { "tokenId": 2, "name": "Risk Scorer", "rootHash": "0x6aaa2027395f9e7c098eae7c193c67895d2320142bc616f5b22ab609207c2107", "metadataFile": "agent-2-risk-scorer.json" }
+  ]
+}

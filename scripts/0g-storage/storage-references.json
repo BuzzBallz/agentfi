@@ -1,0 +1,21 @@
+{
+  "note": "Root hashes computed via 0G SDK. On-chain submission pending — Flow contract Market proxy reverts on Galileo testnet (known infra issue). Re-run upload-metadata.js when resolved.",
+  "agent-0-portfolio-analyzer": {
+    "rootHash": "0x0e14bbafc93a89c4fea4b2cec4df6e563426c7adf38962dd6c9662ed005eb06b",
+    "status": "HASH COMPUTED — on-chain tx pending"
+  },
+  "agent-1-yield-optimizer": {
+    "rootHash": "0x5ad0ccfbb4b1def71c82ed71b242b87c14edcf4cd9eee7ed82f6a119cae6c2b7",
+    "status": "HASH COMPUTED — on-chain tx pending"
+  },
+  "agent-2-risk-scorer": {
+    "rootHash": "0x6aaa2027395f9e7c098eae7c193c67895d2320142bc616f5b22ab609207c2107",
+    "status": "HASH COMPUTED — on-chain tx pending"
+  },
+  "config": {
+    "chain": "0G Galileo Testnet (16602)",
+    "flowContract": "0x22E03a6A89B950F1c82ec5e74F8eCa321a105296",
+    "indexer": "https://indexer-storage-testnet-turbo.0g.ai",
+    "wallet": "0x96455C9b00D530BD0629b71B674298440328b1Dd"
+  }
+}
