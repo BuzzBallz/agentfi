@@ -167,7 +167,7 @@ export default function HomePage() {
                 className="fade-in-up flex gap-4"
                 style={{ animationDelay: "400ms" }}
               >
-                {["$45,000 Prize Pool", "3 AI Agents", "Multi-Chain"].map(
+                {["Marketplace Agents", "Multi-Chain"].map(
                   (stat) => (
                     <span
                       key={stat}
