@@ -3,56 +3,13 @@ import { useState, useEffect } from "react"
 import TiltedCard from "@/components/TiltedCard"
 import GlareHover from "@/components/GlareHover"
 import AnimatedContent from "@/components/AnimatedContent"
-
-const STATS = [
-  { title: "3 iNFTs", subtitle: "Owned on 0G Chain", label: "Collection", value: "iNFT" },
-  { title: "0.031 ADI", subtitle: "Total earned across all agents", label: "Earnings", value: "ADI" },
-  { title: "My Agents", subtitle: "iNFT collection on 0G Chain", label: "0G Testnet", value: "ERC-7857" },
-]
+import Folder from "@/components/Folder"
 
 const AGENTS = [
   { id: "#0042", name: "Portfolio Analyzer", model: "gpt-4o-mini", capabilities: "DeFi Analysis", minted: "Feb 18, 2026", queries: "47", earned: "0.012 ADI", chain: "0G Chain", status: "ACTIVE" },
   { id: "#0043", name: "Yield Optimizer", model: "gpt-4o-mini", capabilities: "Yield Farming", minted: "Feb 18, 2026", queries: "31", earned: "0.009 ADI", chain: "0G Chain", status: "ACTIVE" },
   { id: "#0044", name: "Risk Scorer", model: "gpt-4o-mini", capabilities: "Risk Assessment", minted: "Feb 18, 2026", queries: "89", earned: "0.010 ADI", chain: "0G Chain", status: "IDLE" },
 ]
-
-function generateStatImage(stat: typeof STATS[0]): string {
-  const canvas = document.createElement("canvas")
-  canvas.width = 400
-  canvas.height = 220
-  const ctx = canvas.getContext("2d")!
-
-  // Background
-  ctx.fillStyle = "#1A1208"
-  ctx.fillRect(0, 0, 400, 220)
-
-  // Gold top bar
-  ctx.fillStyle = "#C9A84C"
-  ctx.fillRect(0, 0, 400, 3)
-
-  // Dot pattern
-  ctx.fillStyle = "#241A0E"
-  for (let y = 20; y < 220; y += 24) {
-    for (let x = 20; x < 400; x += 24) {
-      ctx.beginPath()
-      ctx.arc(x, y, 1.5, 0, Math.PI * 2)
-      ctx.fill()
-    }
-  }
-
-  // Large title
-  ctx.fillStyle = "#C9A84C"
-  ctx.font = "bold 42px monospace"
-  ctx.textAlign = "center"
-  ctx.fillText(stat.title, 200, 120)
-
-  // Subtitle
-  ctx.fillStyle = "#9A8060"
-  ctx.font = "13px monospace"
-  ctx.fillText(stat.subtitle, 200, 155)
-
-  return canvas.toDataURL("image/png")
-}
 
 function generateAgentImage(_agent: typeof AGENTS[0]): string {
   const canvas = document.createElement("canvas")
@@ -77,11 +34,9 @@ function generateAgentImage(_agent: typeof AGENTS[0]): string {
 
 export default function MyAgentsPage() {
   const [images, setImages] = useState<string[]>([])
-  const [statImages, setStatImages] = useState<string[]>([])
 
   useEffect(() => {
     setImages(AGENTS.map(generateAgentImage))
-    setStatImages(STATS.map(generateStatImage))
   }, [])
 
   const overlayContent = (a: typeof AGENTS[0]) => (
@@ -117,29 +72,57 @@ export default function MyAgentsPage() {
         <p style={{ color: "#9A8060", fontSize: 14, marginTop: 8 }}>Your iNFT collection on 0G Chain</p>
       </div>
 
-      {/* Stat TiltedCards — replaces MagicBento */}
-      {statImages.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 48 }}>
-          {STATS.map((stat, i) => (
-            <AnimatedContent key={i} direction="vertical" distance={30} duration={0.5} delay={i * 0.1} animateOpacity>
-              <TiltedCard
-                imageSrc={statImages[i]}
-                altText={stat.title}
-                captionText={stat.label}
-                containerHeight="220px"
-                containerWidth="100%"
-                imageHeight="220px"
-                imageWidth="100%"
-                scaleOnHover={1.05}
-                rotateAmplitude={12}
-                showMobileWarning={false}
-                showTooltip={true}
-                displayOverlayContent={false}
-              />
-            </AnimatedContent>
-          ))}
+      {/* Folder stats — replaces MagicBento */}
+      <div style={{ marginBottom: 48 }}>
+        <h2 style={{ fontFamily: "monospace", color: "#C9A84C", fontSize: 13, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 24 }}>
+          Collection Overview
+        </h2>
+        <div style={{ display: "flex", gap: 48, alignItems: "flex-end", flexWrap: "wrap" }}>
+
+          {/* Folder 1 — iNFT Count */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+            <Folder
+              color="#C9A84C"
+              size={1.4}
+              items={[
+                <div key="f1p1" style={{ color: "#1A1208", fontFamily: "monospace", fontSize: 10, fontWeight: "bold", textAlign: "center" }}>3 iNFTs<br/>Owned</div>,
+                <div key="f1p2" style={{ color: "#1A1208", fontFamily: "monospace", fontSize: 9, textAlign: "center" }}>0G Chain<br/>Testnet</div>,
+                <div key="f1p3" style={{ color: "#1A1208", fontFamily: "monospace", fontSize: 9, textAlign: "center" }}>ERC-7857<br/>Standard</div>,
+              ]}
+            />
+            <p style={{ color: "#C9A84C", fontFamily: "monospace", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", margin: 0 }}>Collection</p>
+          </div>
+
+          {/* Folder 2 — ADI Earned */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+            <Folder
+              color="#8A6E2E"
+              size={1.4}
+              items={[
+                <div key="f2p1" style={{ color: "#1A1208", fontFamily: "monospace", fontSize: 10, fontWeight: "bold", textAlign: "center" }}>0.031 ADI<br/>Earned</div>,
+                <div key="f2p2" style={{ color: "#1A1208", fontFamily: "monospace", fontSize: 9, textAlign: "center" }}>47 Queries<br/>Total</div>,
+                <div key="f2p3" style={{ color: "#1A1208", fontFamily: "monospace", fontSize: 9, textAlign: "center" }}>ADI Chain<br/>Payments</div>,
+              ]}
+            />
+            <p style={{ color: "#C9A84C", fontFamily: "monospace", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", margin: 0 }}>Earnings</p>
+          </div>
+
+          {/* Folder 3 — Network */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+            <Folder
+              color="#5C4422"
+              size={1.4}
+              items={[
+                <div key="f3p1" style={{ color: "#F5ECD7", fontFamily: "monospace", fontSize: 10, fontWeight: "bold", textAlign: "center" }}>0G Chain<br/>Testnet</div>,
+                <div key="f3p2" style={{ color: "#F5ECD7", fontFamily: "monospace", fontSize: 9, textAlign: "center" }}>Hedera<br/>HCS-10</div>,
+                <div key="f3p3" style={{ color: "#F5ECD7", fontFamily: "monospace", fontSize: 9, textAlign: "center" }}>ADI Chain<br/>L2</div>,
+              ]}
+            />
+            <p style={{ color: "#C9A84C", fontFamily: "monospace", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", margin: 0 }}>Networks</p>
+          </div>
+
         </div>
-      )}
+      </div>
 
       {/* 3 TiltedCards side by side */}
       {images.length > 0 && (
