@@ -1,9 +1,7 @@
 "use client"
-import { Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarGroupItem, SidebarFooter, useSidebar } from "@/components/ui/sidebar"
+import { Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarGroupItem, SidebarFooter } from "@/components/ui/sidebar"
 import WalletConnect from "./WalletConnect"
 import FadeContent from "./FadeContent"
-import SplitText from "./SplitText"
-import { useState, useEffect } from "react"
 
 const NAV = [
   {
@@ -26,34 +24,10 @@ const NAV = [
 ]
 
 export default function AppSidebar() {
-  const { open } = useSidebar()
-  const [wasOpen, setWasOpen] = useState(false)
-
-  useEffect(() => {
-    if (open) setWasOpen(true)
-    else {
-      const timeout = setTimeout(() => setWasOpen(false), 350)
-      return () => clearTimeout(timeout)
-    }
-  }, [open])
-
   return (
     <Sidebar>
       <SidebarHeader>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {(open || wasOpen) && (
-            <SplitText
-              text="AgentFi"
-              tag="span"
-              delay={40}
-              duration={0.5}
-              ease="power3.out"
-              from={{ opacity: 0, y: 10 }}
-              to={{ opacity: 1, y: 0 }}
-              className=""
-            />
-          )}
-        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }} />
       </SidebarHeader>
 
       <SidebarContent>
