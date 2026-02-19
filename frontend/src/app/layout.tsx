@@ -15,7 +15,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body style={{ margin: 0, padding: 0, background: "#1A1208", minHeight: "100vh" }}>
-        {/* Fixed dot grid background */}
         <DotGrid
           dotSize={4}
           gap={28}
@@ -26,7 +25,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           shockStrength={4}
           returnDuration={1.5}
         />
-        {/* All content above the grid */}
         <div style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
           <Providers>
             <CardNav />
