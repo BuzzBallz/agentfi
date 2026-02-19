@@ -23,35 +23,6 @@ APY found: 12.4% (Aave v3)
 Payment: 0.01 ADI ✓ settled
 iNFT #0042 minted on 0G ✓`;
 
-const AGENTS = [
-  {
-    name: "Portfolio Analyzer",
-    description: "Analyzes DeFi portfolio composition and allocation risk",
-    price: "0.01",
-    capabilities: ["Portfolio Analysis", "Risk Detection", "Allocation Breakdown"],
-    category: "portfolio" as const,
-  },
-  {
-    name: "Yield Optimizer",
-    description: "Finds the highest risk-adjusted yields across DeFi protocols",
-    price: "0.015",
-    capabilities: ["Yield Scanning", "APY Comparison", "Protocol Rating"],
-    category: "yield" as const,
-  },
-  {
-    name: "Risk Scorer",
-    description: "Scores any token or portfolio on a 1-10 risk scale",
-    price: "0.008",
-    capabilities: ["Risk Scoring", "Volatility Analysis", "Liquidity Check"],
-    category: "risk" as const,
-  },
-];
-
-const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  portfolio: { bg: "rgba(201,168,76,0.1)", text: "#C9A84C", border: "#8A6E2E" },
-  yield: { bg: "rgba(122,158,110,0.1)", text: "#7A9E6E", border: "rgba(122,158,110,0.3)" },
-  risk: { bg: "rgba(196,122,90,0.1)", text: "#C47A5A", border: "rgba(196,122,90,0.3)" },
-};
 
 export default function HomePage() {
   const charCount = TERMINAL_TEXT.length;
@@ -129,12 +100,8 @@ export default function HomePage() {
               animation: scanline 8s linear infinite;
               pointer-events: none;
             }
-            .agent-card { transition: all 0.2s; }
-            .agent-card:hover { background: var(--bg-surface-hover) !important; border-color: var(--border-bright) !important; }
             .cta-secondary { transition: all 0.2s; }
             .cta-secondary:hover { background: rgba(201,168,76,0.1); }
-            .footer-link { transition: color 0.2s; }
-            .footer-link:hover { color: var(--text-primary); }
           `,
         }}
       />
@@ -241,146 +208,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Section 2: How It Works ── */}
-        <section className="relative mx-auto max-w-5xl px-6 py-24">
-          <h2
-            className={`${spaceMono.className} mb-16 text-center text-3xl font-bold`}
-            style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}
-          >
-            How It Works
-          </h2>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            {[
-              {
-                step: "01",
-                title: "Browse Agents",
-                desc: "Find specialized AI agents in the marketplace — each with unique DeFi capabilities and transparent pricing.",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.5" className="h-8 w-8">
-                    <path d="M12 2a8 8 0 0 1 8 8c0 2.5-1.2 4.8-3 6.2V18a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-1.8C5.2 14.8 4 12.5 4 10a8 8 0 0 1 8-8z" />
-                    <path d="M10 22h4M12 2v2M9 18h6" />
-                  </svg>
-                ),
-              },
-              {
-                step: "02",
-                title: "Pay on ADI Chain",
-                desc: "Compliant cross-border payment settled instantly. FATF Travel Rule enforcement built into every transaction.",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#E8C97A" strokeWidth="1.5" className="h-8 w-8">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                  </svg>
-                ),
-              },
-              {
-                step: "03",
-                title: "Own as iNFT",
-                desc: "Your agent is minted as an ERC-7857 iNFT on 0G Chain. Transfer the NFT, transfer the AI.",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#7A6E9E" strokeWidth="1.5" className="h-8 w-8">
-                    <polygon points="12,2 20,7 20,17 12,22 4,17 4,7" />
-                    <polygon points="12,6 16,9 16,15 12,18 8,15 8,9" />
-                  </svg>
-                ),
-              },
-            ].map((item, i) => (
-              <div key={item.step} className="relative text-center">
-                {i < 2 && (
-                  <div className="absolute right-0 top-12 hidden h-px w-8 translate-x-full md:block" style={{ backgroundColor: "var(--border-bright)" }} />
-                )}
-                <div
-                  className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-xl"
-                  style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}
-                >
-                  {item.icon}
-                </div>
-                <span className={`${spaceMono.className} mb-2 block text-xs`} style={{ color: "var(--gold)" }}>
-                  STEP {item.step}
-                </span>
-                <h3
-                  className={`${spaceMono.className} mb-2 text-lg font-bold`}
-                  style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}
-                >
-                  {item.title}
-                </h3>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Section 3: Agent Cards ── */}
-        <section className="relative mx-auto max-w-6xl px-6 py-24">
-          <h2
-            className={`${spaceMono.className} mb-4 text-center text-3xl font-bold`}
-            style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}
-          >
-            Meet the Agents
-          </h2>
-          <p className="mb-12 text-center" style={{ color: "var(--text-secondary)" }}>
-            Three specialized AI agents ready to analyze, optimize, and score your DeFi strategy.
-          </p>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {AGENTS.map((agent) => {
-              const catStyle = CATEGORY_STYLES[agent.category];
-              return (
-                <div
-                  key={agent.name}
-                  className="agent-card group rounded-xl p-6"
-                  style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}
-                >
-                  <div className="mb-4 flex items-start justify-between">
-                    <span
-                      className="rounded-full px-2.5 py-1 text-xs"
-                      style={{ background: catStyle.bg, color: catStyle.text, border: `1px solid ${catStyle.border}` }}
-                    >
-                      {agent.category}
-                    </span>
-                    <span className={`${spaceMono.className} text-sm font-bold`} style={{ color: "var(--gold-light)" }}>
-                      {agent.price} ADI
-                    </span>
-                  </div>
-                  <h3
-                    className={`${spaceMono.className} mb-2 text-lg font-bold`}
-                    style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}
-                  >
-                    {agent.name}
-                  </h3>
-                  <p className="mb-4 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                    {agent.description}
-                  </p>
-                  <div className="mb-5 flex flex-wrap gap-2">
-                    {agent.capabilities.map((cap) => (
-                      <span
-                        key={cap}
-                        className="rounded px-2 py-1 text-xs"
-                        style={{ background: "var(--bg-surface-hover)", color: "var(--text-primary)" }}
-                      >
-                        {cap}
-                      </span>
-                    ))}
-                  </div>
-                  <Link
-                    href="/marketplace"
-                    className={`${spaceMono.className} inline-flex items-center gap-1 text-sm transition-colors hover:opacity-80`}
-                    style={{ color: "var(--gold)" }}
-                  >
-                    Hire Agent
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                      <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                    </svg>
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ── Section 4: Chain Architecture ── */}
+        {/* ── Section 2: Multi-Chain by Design ── */}
         <section className="px-6 py-20" style={{ borderTop: "1px solid var(--border)" }}>
           <div className="mx-auto flex max-w-5xl flex-col items-center gap-12">
             <div className="text-center">
@@ -395,87 +223,8 @@ export default function HomePage() {
               </p>
             </div>
             <LogoCarousel />
-            <div className="grid w-full gap-6 md:grid-cols-3">
-            {[
-              {
-                color: "#C9A84C",
-                name: "0G Chain",
-                role: "Agent Ownership",
-                desc: "iNFT ERC-7857 standard. Each agent lives on-chain. Transfer the NFT, transfer the AI.",
-                detail: "ChainId: 16600",
-              },
-              {
-                color: "#E8C97A",
-                name: "ADI Chain",
-                role: "Compliant Payments",
-                desc: "Institutional-grade L2. FATF Travel Rule compliant. Pay agents cross-border in ADI.",
-                detail: "ChainId: 99999",
-              },
-              {
-                color: "#7A6E9E",
-                name: "Hedera",
-                role: "Agent Execution",
-                desc: "Hedera Agent Kit powers AI orchestration. Fast, low-cost microtransactions per agent call.",
-                detail: "Testnet",
-              },
-            ].map((chain) => (
-              <div
-                key={chain.name}
-                className="rounded-xl p-6"
-                style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}
-              >
-                <div className="mb-4 flex items-center gap-3">
-                  <div
-                    className="h-4 w-4 rounded-full"
-                    style={{ backgroundColor: chain.color, boxShadow: `0 0 12px ${chain.color}40` }}
-                  />
-                  <h3
-                    className={`${spaceMono.className} font-bold`}
-                    style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}
-                  >
-                    {chain.name}
-                  </h3>
-                </div>
-                <span
-                  className={`${spaceMono.className} mb-3 block text-xs font-bold`}
-                  style={{ color: chain.color }}
-                >
-                  {chain.role}
-                </span>
-                <p className="mb-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                  {chain.desc}
-                </p>
-                <span className={`${spaceMono.className} text-xs`} style={{ color: "var(--text-muted)" }}>
-                  {chain.detail}
-                </span>
-              </div>
-            ))}
-            </div>
           </div>
         </section>
-
-        {/* ── Section 5: Footer ── */}
-        <footer className="px-6 py-8" style={{ borderTop: "1px solid var(--border)" }}>
-          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 md:flex-row">
-            <span className={`${spaceMono.className} text-xs`} style={{ color: "var(--text-muted)" }}>
-              AgentFi &middot; ETHDenver 2026
-            </span>
-            <div className="flex gap-6 text-sm" style={{ color: "var(--text-secondary)" }}>
-              <Link href="/marketplace" className="footer-link">
-                Marketplace
-              </Link>
-              <Link href="/dashboard" className="footer-link">
-                Dashboard
-              </Link>
-              <Link href="/my-agents" className="footer-link">
-                My Agents
-              </Link>
-            </div>
-            <span className={`${spaceMono.className} text-xs`} style={{ color: "var(--text-muted)" }}>
-              Built on 0G &middot; ADI &middot; Hedera
-            </span>
-          </div>
-        </footer>
       </main>
     </>
   );
