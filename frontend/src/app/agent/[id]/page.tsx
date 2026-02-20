@@ -34,6 +34,28 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   Risk: { bg: "rgba(196,122,90,0.1)", text: "#C47A5A" },
 };
 
+function formatMarkdown(text: string): string {
+  // Escape HTML first to prevent XSS
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped
+    // Headers (must come before other inline rules)
+    .replace(/^### (.+)$/gm, '<h4 style="font-size:15px;font-weight:700;margin:16px 0 8px;color:#E8C97A">$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3 style="font-size:17px;font-weight:700;margin:20px 0 10px;color:#F5ECD7">$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2 style="font-size:20px;font-weight:700;margin:20px 0 12px;color:#F5ECD7">$1</h2>')
+    // Horizontal rules
+    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid #3D2E1A;margin:16px 0"/>')
+    // Bold
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#E8C97A">$1</strong>')
+    // Table rows (simple pipe-delimited)
+    .replace(/\|(.+)\|/g, (match) => `<span style="font-family:monospace;font-size:12px">${match}</span>`)
+    // Line breaks
+    .replace(/\n\n/g, '<div style="height:12px"></div>')
+    .replace(/\n/g, '<br/>');
+}
+
 export default function AgentPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const tokenId = Number(params.id);
@@ -54,6 +76,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
     hederaProof,
     isLoading: agentLoading,
     error: agentError,
+    reset: resetAgent,
   } = useExecuteAgent();
 
   // Fetch listing to get owner address
@@ -432,12 +455,15 @@ export default function AgentPage({ params }: { params: { id: string } }) {
               </button>
 
               {txHash && (
-                <span
+                <a
+                  href={`https://chainscan-galileo.0g.ai/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={spaceMono.className}
-                  style={{ color: "#5C4A32", fontSize: 11 }}
+                  style={{ color: "#C9A84C", fontSize: 11, textDecoration: "underline" }}
                 >
-                  tx: {txHash.slice(0, 10)}...
-                </span>
+                  tx: {txHash.slice(0, 10)}...{txHash.slice(-6)}
+                </a>
               )}
             </div>
 
@@ -499,17 +525,15 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                       color: "#F5ECD7",
                       fontSize: 14,
                       lineHeight: 1.7,
-                      whiteSpace: "pre-wrap",
                       background: "#1A1208",
                       border: "1px solid #3D2E1A",
                       borderRadius: 8,
                       padding: 16,
-                      maxHeight: 400,
+                      maxHeight: 500,
                       overflowY: "auto",
                     }}
-                  >
-                    {agentResult}
-                  </div>
+                    dangerouslySetInnerHTML={{ __html: formatMarkdown(agentResult) }}
+                  />
 
                   {/* Hedera Proof */}
                   {hederaProof && (
@@ -535,13 +559,16 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                       </div>
                       {hederaProof.hcs_messages?.map(
                         (msg: string, i: number) => (
-                          <div
+                          <a
                             key={i}
+                            href={`https://hashscan.io/testnet/transaction/${msg}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className={spaceMono.className}
-                            style={{ color: "#7A9E6E", fontSize: 12 }}
+                            style={{ color: "#7A9E6E", fontSize: 12, display: "block", textDecoration: "underline" }}
                           >
-                            HCS tx: {msg}
-                          </div>
+                            HCS: {msg}
+                          </a>
                         )
                       )}
                       {hederaProof.agents_used && (
@@ -564,6 +591,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                     onClick={() => {
                       setStep("idle");
                       setQuery("");
+                      resetAgent();
                     }}
                     className={spaceMono.className}
                     style={{

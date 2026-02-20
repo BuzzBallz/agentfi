@@ -15,7 +15,7 @@ export const ogTestnet = defineChain({
   blockExplorers: {
     default: {
       name: "0G Explorer",
-      url: "https://chainscan-newton.0g.ai",
+      url: "https://chainscan-galileo.0g.ai",
     },
   },
   testnet: true,

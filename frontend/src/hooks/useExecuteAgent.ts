@@ -15,8 +15,18 @@ export function useExecuteAgent() {
     try {
       const res = await executeAgent(tokenId, query);
       if (res.success) {
-        setResult(typeof res.data === "string" ? res.data : JSON.stringify(res.data));
-        setHederaProof(res.hedera_proof || null);
+        // Backend returns { data: { result: "...", hedera_proof: {...} } }
+        // or { data: "plain string" } for simple responses
+        if (typeof res.data === "string") {
+          setResult(res.data);
+        } else if (res.data && typeof res.data === "object") {
+          setResult(res.data.result || JSON.stringify(res.data));
+          setHederaProof(res.data.hedera_proof || null);
+        }
+        // Fallback: check top-level hedera_proof
+        if (res.hedera_proof) {
+          setHederaProof(res.hedera_proof);
+        }
       } else {
         setError(res.error || "Agent execution failed");
       }
@@ -27,5 +37,12 @@ export function useExecuteAgent() {
     }
   };
 
-  return { execute, result, hederaProof, isLoading, error };
+  const reset = () => {
+    setResult(null);
+    setHederaProof(null);
+    setIsLoading(false);
+    setError(null);
+  };
+
+  return { execute, result, hederaProof, isLoading, error, reset };
 }
