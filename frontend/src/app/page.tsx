@@ -73,8 +73,9 @@ export default function HomePage() {
   useEffect(() => {
     if (contentRef.current) {
       const contentHeight = contentRef.current.scrollHeight
-      const newHeight = contentHeight + 80
-      setTerminalHeight(Math.min(newHeight, 560))
+      const headerHeight = 48
+      const paddingExtra = 32
+      setTerminalHeight(headerHeight + contentHeight + paddingExtra)
     }
   }, [displayedLines, currentText])
 
@@ -237,36 +238,36 @@ export default function HomePage() {
 
             {/* Right — Terminal */}
             <div className="flex items-start lg:col-span-2">
-              <div
-                className="glow-card w-full"
-                style={{
-                  background: "#0D0A06",
-                  border: "1px solid #3D2E1A",
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  height: terminalHeight,
-                  transition: "height 0.15s ease-out",
-                  width: "100%",
-                }}
-              >
-                <div style={{ padding: "12px 16px", background: "#1A1208", borderBottom: "1px solid #3D2E1A", display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#C47A5A" }} />
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#C9A84C" }} />
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#7A9E6E" }} />
-                  <span style={{ fontFamily: "monospace", fontSize: 11, color: "#5C4A32", marginLeft: 8, letterSpacing: "0.1em" }}>agentfi — terminal</span>
-                </div>
+              <div style={{ overflow: "hidden", borderRadius: 12, border: "1px solid #3D2E1A", width: "100%" }}>
                 <div
-                  ref={contentRef}
-                  style={{ padding: "16px 20px", fontFamily: "monospace", fontSize: 13, lineHeight: 1.7 }}
+                  className="glow-card"
+                  style={{
+                    background: "#0D0A06",
+                    borderRadius: 12,
+                    height: terminalHeight,
+                    transition: "height 0.2s ease-out",
+                    width: "100%",
+                  }}
                 >
-                  {displayedLines.map((line, i) => (
-                    <div key={i} style={{ color: line.color, whiteSpace: "pre-wrap" }}>{line.text}</div>
-                  ))}
-                  {currentLine < LINES.length && (
-                    <div style={{ color: "#F5ECD7" }}>
-                      {currentText}<span style={{ animation: "blink 1s step-end infinite", color: "#C9A84C" }}>█</span>
-                    </div>
-                  )}
+                  <div style={{ padding: "12px 16px", background: "#1A1208", borderBottom: "1px solid #3D2E1A", display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#C47A5A" }} />
+                    <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#C9A84C" }} />
+                    <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#7A9E6E" }} />
+                    <span style={{ fontFamily: "monospace", fontSize: 11, color: "#5C4A32", marginLeft: 8, letterSpacing: "0.1em" }}>agentfi — terminal</span>
+                  </div>
+                  <div
+                    ref={contentRef}
+                    style={{ padding: "16px 20px", fontFamily: "monospace", fontSize: 13, lineHeight: 1.7 }}
+                  >
+                    {displayedLines.map((line, i) => (
+                      <div key={i} style={{ color: line.color, whiteSpace: "pre-wrap" }}>{line.text}</div>
+                    ))}
+                    {currentLine < LINES.length && (
+                      <div style={{ color: "#F5ECD7" }}>
+                        {currentText}<span style={{ animation: "blink 1s step-end infinite", color: "#C9A84C" }}>█</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
