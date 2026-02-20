@@ -4,13 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Space_Mono, DM_Sans } from "next/font/google";
 import { useAccount } from "wagmi";
-import { useAgentData, useIsAuthorized } from "@/hooks/useAgentData";
+import { useAgentData, useIsAuthorized, useTokenImage } from "@/hooks/useAgentData";
 import { useHireAgent } from "@/hooks/useHireAgent";
 import { useExecuteAgent } from "@/hooks/useExecuteAgent";
 import { TOKEN_TO_AGENT } from "@/lib/api";
 import { PLATFORM_FEE_PCT } from "@/config/contracts";
 import { formatEther } from "viem";
 import ReactMarkdown from "react-markdown";
+import AgentReputation from "@/components/AgentReputation";
+import ADICompliance from "@/components/ADICompliance";
 
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
 const dmSans = DM_Sans({ subsets: ["latin"] });
@@ -27,17 +29,25 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   Risk: { bg: "rgba(196,122,90,0.1)", text: "#C47A5A" },
 };
 
+const FALLBACK_NAMES: Record<number, string> = {
+  0: "Portfolio Analyzer",
+  1: "Yield Optimizer",
+  2: "Risk Scorer",
+};
+
 export default function AgentPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { address } = useAccount();
   const tokenId = Number(params.id);
   const {
     agentData,
+    tokenURI,
     metadataHash,
     owner: ownerAddress,
     isLoading: dataLoading,
     isError: dataError,
   } = useAgentData(tokenId);
+  const { imageUrl } = useTokenImage(tokenURI);
   const isAuthorized = useIsAuthorized(tokenId, address);
   const isOwner =
     address && ownerAddress
@@ -59,18 +69,21 @@ export default function AgentPage({ params }: { params: { id: string } }) {
     execute,
     result: agentResult,
     hederaProof,
+    afcReward,
+    crossAgentReport,
     isLoading: agentLoading,
     error: agentError,
     reset: resetAgent,
   } = useExecuteAgent();
 
   const [query, setQuery] = useState("");
+  const [crossAgent, setCrossAgent] = useState(false);
   const [step, setStep] = useState<
     "idle" | "tx" | "confirming" | "executing" | "done"
   >("idle");
 
-  // Name from contract, not hardcoded
-  const agentName = agentData?.name || `Agent #${tokenId}`;
+  // Name from contract, with fallback
+  const agentName = dataLoading ? "Loading..." : (agentData?.name || FALLBACK_NAMES[tokenId] || `Agent #${tokenId}`);
   const category = CATEGORY_MAP[tokenId] || "DeFi";
   const catColor = CATEGORY_COLORS[category] || CATEGORY_COLORS.DeFi;
   const agentId = TOKEN_TO_AGENT[tokenId];
@@ -79,9 +92,9 @@ export default function AgentPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     if (txSuccess && step === "confirming" && query) {
       setStep("executing");
-      execute(tokenId, query, address);
+      execute(tokenId, query, address, crossAgent);
     }
-  }, [txSuccess, step, query, tokenId, execute]);
+  }, [txSuccess, step, query, tokenId, execute, crossAgent]);
 
   // Mark done when agent result arrives
   useEffect(() => {
@@ -177,6 +190,29 @@ export default function AgentPage({ params }: { params: { id: string } }) {
         </div>
       ) : (
         <>
+          {/* SVG Image from tokenURI */}
+          {imageUrl && (
+            <div
+              style={{
+                border: "1px solid #3D2E1A",
+                borderRadius: 12,
+                overflow: "hidden",
+                marginBottom: 20,
+                background: "#241A0E",
+                display: "flex",
+                justifyContent: "center",
+                maxHeight: 280,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt={`${agentName} iNFT`}
+                style={{ maxWidth: "100%", maxHeight: 280, objectFit: "contain" }}
+              />
+            </div>
+          )}
+
           {/* Name + badges */}
           <div
             style={{
@@ -405,6 +441,12 @@ export default function AgentPage({ params }: { params: { id: string } }) {
               )}
           </div>
 
+          {/* Agent Reputation — live AFC balance from Hedera */}
+          <AgentReputation tokenId={tokenId} />
+
+          {/* ADI Chain Compliance — Mode B stats */}
+          <ADICompliance />
+
           {/* Query input + Hire button */}
           <div
             style={{
@@ -446,6 +488,38 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                 fontFamily: "inherit",
               }}
             />
+
+            {/* x402 Cross-Agent Toggle */}
+            {tokenId !== 2 && (
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 12,
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={crossAgent}
+                  onChange={(e) => setCrossAgent(e.target.checked)}
+                  style={{ accentColor: "#A78BFA", width: 16, height: 16 }}
+                />
+                <span
+                  className={spaceMono.className}
+                  style={{ color: "#A78BFA", fontSize: 11, letterSpacing: "0.03em" }}
+                >
+                  Enable cross-agent collaboration (x402)
+                </span>
+                <span
+                  className={spaceMono.className}
+                  style={{ color: "#5C4A32", fontSize: 10 }}
+                >
+                  Pays AFC to consult other agents
+                </span>
+              </label>
+            )}
 
             <div
               style={{
@@ -578,8 +652,8 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                     <ReactMarkdown>{agentResult}</ReactMarkdown>
                   </div>
 
-                  {/* Hedera Proof */}
-                  {hederaProof && (
+                  {/* Hedera Proofs */}
+                  {(hederaProof || afcReward) && (
                     <div
                       style={{
                         marginTop: 14,
@@ -598,23 +672,50 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                           marginBottom: 6,
                         }}
                       >
-                        HEDERA PROOF
+                        HEDERA PROOFS
                       </div>
-                      {hederaProof.hcs_messages?.map(
+
+                      {/* HCS Attestation */}
+                      {hederaProof?.hcs_messages?.map(
                         (msg: string, i: number) => (
-                          <a
-                            key={i}
-                            href={`https://hashscan.io/testnet/transaction/${msg}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={spaceMono.className}
-                            style={{ color: "#7A9E6E", fontSize: 12, display: "block", textDecoration: "underline" }}
-                          >
-                            HCS: {msg}
-                          </a>
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                            <span style={{ color: "#7A9E6E", fontSize: 12 }}>&#x2705;</span>
+                            <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>HCS Attestation:</span>
+                            <a
+                              href={`https://hashscan.io/testnet/transaction/${msg}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={spaceMono.className}
+                              style={{ color: "#7A9E6E", fontSize: 11, textDecoration: "underline" }}
+                            >
+                              {msg}
+                            </a>
+                          </div>
                         )
                       )}
-                      {hederaProof.agents_used && (
+
+                      {/* AFC Token Reward */}
+                      {afcReward?.status && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <span style={{ color: "#C9A84C", fontSize: 12 }}>&#x2705;</span>
+                          <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>
+                            AFC Reward: {afcReward.amount} &rarr; {afcReward.recipient}
+                          </span>
+                          {afcReward.hashscan_url && (
+                            <a
+                              href={afcReward.hashscan_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={spaceMono.className}
+                              style={{ color: "#C9A84C", fontSize: 11, textDecoration: "underline" }}
+                            >
+                              HashScan
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {hederaProof?.agents_used && (
                         <div
                           className={spaceMono.className}
                           style={{
@@ -629,11 +730,64 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                     </div>
                   )}
 
+                  {/* x402 Cross-Agent Report */}
+                  {crossAgentReport?.enabled && crossAgentReport.report?.length > 0 && (
+                    <div
+                      style={{
+                        marginTop: 14,
+                        padding: 12,
+                        background: "rgba(167,139,250,0.08)",
+                        border: "1px solid rgba(167,139,250,0.2)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div
+                        className={spaceMono.className}
+                        style={{
+                          color: "#A78BFA",
+                          fontSize: 10,
+                          letterSpacing: "0.08em",
+                          marginBottom: 6,
+                        }}
+                      >
+                        x402 CROSS-AGENT COLLABORATION
+                      </div>
+
+                      {crossAgentReport.report.map((item: any, i: number) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 12 }}>
+                            {item.status === "success" ? "\u2705" : item.status === "insufficient_funds" ? "\u26A0\uFE0F" : "\u274C"}
+                          </span>
+                          <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>
+                            {item.agent?.replace("_", " ")}:
+                          </span>
+                          <span className={spaceMono.className} style={{ color: "#A78BFA", fontSize: 11 }}>
+                            {item.status === "success"
+                              ? `paid ${item.cost} via x402`
+                              : item.status === "insufficient_funds"
+                              ? `needs ${item.required} (have ${item.available})`
+                              : item.reason || item.status}
+                          </span>
+                        </div>
+                      ))}
+
+                      {crossAgentReport.payments?.length > 0 && (
+                        <div
+                          className={spaceMono.className}
+                          style={{ color: "#5C4A32", fontSize: 10, marginTop: 6 }}
+                        >
+                          Payment split: 70% owner / 20% agent reputation / 10% platform
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Reset button */}
                   <button
                     onClick={() => {
                       setStep("idle");
                       setQuery("");
+                      setCrossAgent(false);
                       resetAgent();
                       resetHire();
                     }}
