@@ -45,7 +45,8 @@ export default function HomePage() {
   const [currentLine, setCurrentLine] = useState(0)
   const [currentChar, setCurrentChar] = useState(0)
   const [currentText, setCurrentText] = useState("")
-  const terminalRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [terminalHeight, setTerminalHeight] = useState(48)
 
   useEffect(() => {
     if (currentLine >= LINES.length) return
@@ -60,15 +61,7 @@ export default function HomePage() {
       return () => clearTimeout(timeout)
     } else {
       const timeout = setTimeout(() => {
-        setDisplayedLines(prev => {
-          const next = [...prev, { text: line.text, color: line.color }]
-          setTimeout(() => {
-            if (terminalRef.current) {
-              terminalRef.current.scrollTop = terminalRef.current.scrollHeight
-            }
-          }, 10)
-          return next
-        })
+        setDisplayedLines(prev => [...prev, { text: line.text, color: line.color }])
         setCurrentText("")
         setCurrentChar(0)
         setCurrentLine(prev => prev + 1)
@@ -76,6 +69,14 @@ export default function HomePage() {
       return () => clearTimeout(timeout)
     }
   }, [currentLine, currentChar])
+
+  useEffect(() => {
+    if (contentRef.current) {
+      const contentHeight = contentRef.current.scrollHeight
+      const newHeight = contentHeight + 80
+      setTerminalHeight(Math.min(newHeight, 560))
+    }
+  }, [displayedLines, currentText])
 
   return (
     <>
@@ -237,28 +238,35 @@ export default function HomePage() {
             {/* Right — Terminal */}
             <div className="flex items-start lg:col-span-2">
               <div
-                className="glow-card w-full overflow-hidden rounded-xl backdrop-blur"
-                style={{ background: "var(--bg-surface)", border: "1px solid var(--border-bright)", minHeight: 520 }}
+                className="glow-card w-full"
+                style={{
+                  background: "#0D0A06",
+                  border: "1px solid #3D2E1A",
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  height: terminalHeight,
+                  transition: "height 0.15s ease-out",
+                  width: "100%",
+                }}
               >
-                <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid var(--border-bright)" }}>
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FF5F57" }} />
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FFBD2E" }} />
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#28CA41" }} />
-                  <span className={`${spaceMono.className} ml-2 text-xs`} style={{ color: "var(--text-muted)" }}>
-                    agentfi-terminal
-                  </span>
+                <div style={{ padding: "12px 16px", background: "#1A1208", borderBottom: "1px solid #3D2E1A", display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#C47A5A" }} />
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#C9A84C" }} />
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#7A9E6E" }} />
+                  <span style={{ fontFamily: "monospace", fontSize: 11, color: "#5C4A32", marginLeft: 8, letterSpacing: "0.1em" }}>agentfi — terminal</span>
                 </div>
-                <div ref={terminalRef} className="p-5" style={{ maxHeight: 440, overflowY: "auto" }}>
-                  <div style={{ fontFamily: "monospace", fontSize: 12, lineHeight: 1.8, display: "flex", flexDirection: "column", gap: 2 }}>
-                    {displayedLines.map((line, i) => (
-                      <div key={i} style={{ color: line.color }}>{line.text}</div>
-                    ))}
-                    {currentLine < LINES.length && (
-                      <div style={{ color: LINES[currentLine].color }}>
-                        {currentText}<span style={{ animation: "blink 1s infinite", color: "#C9A84C" }}>▋</span>
-                      </div>
-                    )}
-                  </div>
+                <div
+                  ref={contentRef}
+                  style={{ padding: "16px 20px", fontFamily: "monospace", fontSize: 13, lineHeight: 1.7 }}
+                >
+                  {displayedLines.map((line, i) => (
+                    <div key={i} style={{ color: line.color, whiteSpace: "pre-wrap" }}>{line.text}</div>
+                  ))}
+                  {currentLine < LINES.length && (
+                    <div style={{ color: "#F5ECD7" }}>
+                      {currentText}<span style={{ animation: "blink 1s step-end infinite", color: "#C9A84C" }}>█</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
