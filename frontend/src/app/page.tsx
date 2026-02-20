@@ -145,7 +145,7 @@ export default function HomePage() {
       <main className={`${dmSans.className} relative min-h-screen`}>
 
         {/* ── Section 1: Hero ── */}
-        <section className="relative mx-auto flex min-h-screen max-w-7xl items-center px-6" style={{ paddingTop: "20px", paddingBottom: "80px" }}>
+        <section className="relative mx-auto flex min-h-screen max-w-7xl items-start px-6" style={{ paddingTop: "60px", paddingBottom: "80px" }}>
           <div className="grid w-full gap-12 lg:grid-cols-5">
             {/* Left */}
             <div className="flex flex-col justify-center lg:col-span-3">
@@ -235,10 +235,10 @@ export default function HomePage() {
             </div>
 
             {/* Right — Terminal */}
-            <div className="flex items-center lg:col-span-2">
+            <div className="flex items-start lg:col-span-2">
               <div
                 className="glow-card w-full overflow-hidden rounded-xl backdrop-blur"
-                style={{ background: "var(--bg-surface)", border: "1px solid var(--border-bright)", minHeight: 420 }}
+                style={{ background: "var(--bg-surface)", border: "1px solid var(--border-bright)", minHeight: 520 }}
               >
                 <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid var(--border-bright)" }}>
                   <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FF5F57" }} />
@@ -248,7 +248,7 @@ export default function HomePage() {
                     agentfi-terminal
                   </span>
                 </div>
-                <div ref={terminalRef} className="p-5" style={{ maxHeight: 360, overflowY: "auto" }}>
+                <div ref={terminalRef} className="p-5" style={{ maxHeight: 440, overflowY: "auto" }}>
                   <div style={{ fontFamily: "monospace", fontSize: 12, lineHeight: 1.8, display: "flex", flexDirection: "column", gap: 2 }}>
                     {displayedLines.map((line, i) => (
                       <div key={i} style={{ color: line.color }}>{line.text}</div>
