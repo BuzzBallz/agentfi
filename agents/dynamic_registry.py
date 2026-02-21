@@ -18,6 +18,7 @@ _dynamic_agents: dict[str, DynamicAgent] = {}
 _token_map: dict[int, str] = {}
 _hedera_info: dict[str, dict[str, str]] = {}  # agent_id -> {account, inbound, outbound}
 _afc_earned: dict[str, float] = {}  # agent_id -> cumulative AFC earned
+_x402_configs: dict[str, dict] = {}  # agent_id -> {x402_enabled, price_afc, allow_cross_agent, max_budget_afc}
 
 
 def _read_store() -> list[dict]:
@@ -36,12 +37,13 @@ def _write_store(entries: list[dict]) -> None:
 
 def load_dynamic_agents() -> dict[str, DynamicAgent]:
     """Load all dynamic agents from disk. Called at startup."""
-    global _dynamic_agents, _token_map, _hedera_info, _afc_earned
+    global _dynamic_agents, _token_map, _hedera_info, _afc_earned, _x402_configs
     entries = _read_store()
     agents: dict[str, DynamicAgent] = {}
     tmap: dict[int, str] = {}
     hinfo: dict[str, dict[str, str]] = {}
     afc: dict[str, float] = {}
+    x402: dict[str, dict] = {}
 
     for entry in entries:
         agent_id = entry["agent_id"]
@@ -58,12 +60,20 @@ def load_dynamic_agents() -> dict[str, DynamicAgent]:
             hinfo[agent_id] = entry["hedera"]
         if "afc_earned" in entry:
             afc[agent_id] = entry["afc_earned"]
+        if entry.get("x402_enabled"):
+            x402[agent_id] = {
+                "x402_enabled": entry.get("x402_enabled", False),
+                "price_afc": entry.get("price_afc", 1.0),
+                "allow_cross_agent": entry.get("allow_cross_agent", False),
+                "max_budget_afc": entry.get("max_budget_afc", 5.0),
+            }
 
     with _lock:
         _dynamic_agents = agents
         _token_map = tmap
         _hedera_info = hinfo
         _afc_earned = afc
+        _x402_configs = x402
 
     logger.info(f"Loaded {len(agents)} dynamic agents from disk")
     return agents
@@ -76,6 +86,10 @@ def register_agent(
     system_prompt: str,
     token_id: int,
     price_per_call: float = 0.001,
+    x402_enabled: bool = False,
+    allow_cross_agent: bool = False,
+    price_afc: float = 1.0,
+    max_budget_afc: float = 5.0,
 ) -> DynamicAgent:
     """Create, persist, and register a new dynamic agent."""
     with _lock:
@@ -91,19 +105,33 @@ def register_agent(
         _dynamic_agents[agent_id] = agent
         _token_map[token_id] = agent_id
 
+        if x402_enabled:
+            _x402_configs[agent_id] = {
+                "x402_enabled": True,
+                "price_afc": price_afc,
+                "allow_cross_agent": allow_cross_agent,
+                "max_budget_afc": max_budget_afc,
+            }
+
         # Persist
         entries = _read_store()
-        entries.append({
+        entry: dict = {
             "agent_id": agent_id,
             "name": name,
             "description": description,
             "system_prompt": system_prompt,
             "token_id": token_id,
             "price_per_call": price_per_call,
-        })
+        }
+        if x402_enabled:
+            entry["x402_enabled"] = True
+            entry["price_afc"] = price_afc
+            entry["allow_cross_agent"] = allow_cross_agent
+            entry["max_budget_afc"] = max_budget_afc
+        entries.append(entry)
         _write_store(entries)
 
-    logger.info(f"Registered dynamic agent: {agent_id} (tokenId={token_id})")
+    logger.info(f"Registered dynamic agent: {agent_id} (tokenId={token_id}, x402={x402_enabled})")
     return agent
 
 
@@ -198,3 +226,15 @@ def get_afc_balances() -> dict[int, float]:
         for token_id, agent_id in _token_map.items():
             result[token_id] = _afc_earned.get(agent_id, 0.0)
     return result
+
+
+def get_x402_config(agent_id: str) -> dict | None:
+    """Get x402 config for a dynamic agent, or None if not x402-enabled."""
+    with _lock:
+        return _x402_configs.get(agent_id)
+
+
+def get_x402_enabled_agents() -> list[str]:
+    """Return agent_ids of all dynamic agents with x402 enabled."""
+    with _lock:
+        return [aid for aid, cfg in _x402_configs.items() if cfg.get("x402_enabled")]

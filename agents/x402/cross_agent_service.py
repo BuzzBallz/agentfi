@@ -8,9 +8,9 @@ import logging
 import httpx
 
 from x402.config import (
-    AGENT_HEDERA_ACCOUNTS,
-    AGENT_NAME_TO_TOKEN_ID,
-    CROSS_AGENT_RECOMMENDATIONS,
+    get_full_agent_name_to_token_id,
+    get_full_cross_agent_recommendations,
+    get_full_hedera_accounts,
     get_registry_config,
 )
 
@@ -73,7 +73,10 @@ class CrossAgentService:
         payments = []
         additional_results = []
 
-        caller_token_id = AGENT_NAME_TO_TOKEN_ID.get(caller_agent_name, 0)
+        name_to_token = get_full_agent_name_to_token_id()
+        hedera_accounts = get_full_hedera_accounts()
+
+        caller_token_id = name_to_token.get(caller_agent_name, 0)
         caller_config = get_registry_config(caller_token_id)
 
         if not cross_agent_enabled or not caller_config.get("allow_cross_agent", False):
@@ -83,7 +86,7 @@ class CrossAgentService:
                 "x402_payments": [],
             }
 
-        recommended = CROSS_AGENT_RECOMMENDATIONS.get(caller_agent_name, [])
+        recommended = get_full_cross_agent_recommendations(caller_agent_name)
         if not recommended:
             return {
                 "enhanced_result": main_result,
@@ -91,7 +94,7 @@ class CrossAgentService:
                 "x402_payments": [],
             }
 
-        caller_hedera = AGENT_HEDERA_ACCOUNTS.get(caller_token_id, "")
+        caller_hedera = hedera_accounts.get(caller_token_id, "")
         afc_balance = await self.get_agent_afc_balance(caller_hedera)
         remaining_budget = min(afc_balance, caller_config.get("max_budget_afc", 0))
 
@@ -101,7 +104,7 @@ class CrossAgentService:
         )
 
         for target_name in recommended:
-            target_token_id = AGENT_NAME_TO_TOKEN_ID.get(target_name)
+            target_token_id = name_to_token.get(target_name)
             if target_token_id is None:
                 continue
 
@@ -138,7 +141,7 @@ class CrossAgentService:
             try:
                 payment_result = await self.afc_payment.process_inter_agent_payment(
                     payer_agent_account=caller_hedera,
-                    target_agent_account=AGENT_HEDERA_ACCOUNTS.get(target_token_id, ""),
+                    target_agent_account=hedera_accounts.get(target_token_id, ""),
                     target_owner_account=target_config.get("owner_hedera_account", ""),
                     total_amount_afc=target_price,
                 )

@@ -43,7 +43,9 @@ export function useMintAgent() {
         name,
         description,
       });
-      encryptedURI = `data:application/json;base64,${btoa(intelligencePayload)}`;
+      const utf8Bytes = new TextEncoder().encode(intelligencePayload);
+      const binaryStr = Array.from(utf8Bytes, (b) => String.fromCharCode(b)).join("");
+      encryptedURI = `data:application/json;base64,${btoa(binaryStr)}`;
     }
 
     writeMint({

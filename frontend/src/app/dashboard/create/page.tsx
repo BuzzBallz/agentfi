@@ -22,6 +22,7 @@ export default function CreateAgentPage() {
   const [capabilities, setCapabilities] = useState("")
   const [price, setPrice] = useState("0.001")
   const [tokenURI, setTokenURI] = useState("")
+  const [x402Enabled, setX402Enabled] = useState(false)
   const [mintedTokenId, setMintedTokenId] = useState<number | null>(null)
   const [step, setStep] = useState<"form" | "minting" | "registering" | "listing" | "done">("form")
   const [registerError, setRegisterError] = useState<string | null>(null)
@@ -64,7 +65,9 @@ export default function CreateAgentPage() {
       const accentColors = ["#C9A84C", "#7A9E6E", "#C47A5A", "#60A5FA", "#A78BFA"]
       const accent = accentColors[name.length % accentColors.length]
       const agentSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#1a1208"/><circle cx="100" cy="80" r="40" fill="none" stroke="${accent}" stroke-width="2" opacity="0.6"/><circle cx="100" cy="80" r="20" fill="${accent}" opacity="0.15"/><circle cx="100" cy="80" r="5" fill="${accent}"/><text x="100" y="88" text-anchor="middle" fill="${accent}" font-family="monospace" font-size="24" font-weight="bold" letter-spacing="6">${initials}</text><text x="100" y="190" text-anchor="middle" fill="${accent}" font-family="monospace" font-size="9" opacity="0.5" letter-spacing="2">ERC-7857 iNFT</text></svg>`
-      const svgDataUri = `data:image/svg+xml;base64,${btoa(agentSvg)}`
+      const svgBytes = new TextEncoder().encode(agentSvg)
+      const svgBinary = Array.from(svgBytes, (b) => String.fromCharCode(b)).join("")
+      const svgDataUri = `data:image/svg+xml;base64,${btoa(svgBinary)}`
 
       const metadata = {
         name,
@@ -77,7 +80,9 @@ export default function CreateAgentPage() {
           ...capsArray.map(c => ({ trait_type: "Capability", value: c })),
         ],
       }
-      finalTokenURI = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`
+      const metaBytes = new TextEncoder().encode(JSON.stringify(metadata))
+      const metaBinary = Array.from(metaBytes, (b) => String.fromCharCode(b)).join("")
+      finalTokenURI = `data:application/json;base64,${btoa(metaBinary)}`
     }
 
     mint(address as `0x${string}`, name, description, capsJson, price, finalTokenURI, systemPrompt || undefined)
@@ -105,6 +110,8 @@ export default function CreateAgentPage() {
       system_prompt: systemPrompt || `You are ${name}, an AI agent on AgentFi. ${description}`,
       token_id: tokenId,
       price_per_call: parseFloat(price) || 0.001,
+      x402_enabled: x402Enabled,
+      allow_cross_agent: x402Enabled,
     })
       .then(() => { if (!cancelled) setStep("listing") })
       .catch((err) => {
@@ -281,6 +288,59 @@ export default function CreateAgentPage() {
             <div style={{ color: "#5C4A32", fontSize: 10, marginTop: 4 }}>
               Paste a 0G Storage / IPFS URL with image, or leave empty for auto-generated metadata
             </div>
+          </div>
+
+          {/* x402 Cross-Agent Toggle */}
+          <div style={{ marginBottom: 24 }}>
+            <label
+              className={spaceMono.className}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                cursor: "pointer",
+                padding: "12px 14px",
+                background: x402Enabled ? "rgba(167,139,250,0.08)" : "transparent",
+                border: `1px solid ${x402Enabled ? "#A78BFA" : "#3D2E1A"}`,
+                borderRadius: 8,
+                transition: "all 0.2s",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={x402Enabled}
+                onChange={e => setX402Enabled(e.target.checked)}
+                style={{ display: "none" }}
+              />
+              <div style={{
+                width: 36,
+                height: 20,
+                borderRadius: 10,
+                background: x402Enabled ? "#A78BFA" : "#3D2E1A",
+                position: "relative",
+                transition: "background 0.2s",
+                flexShrink: 0,
+              }}>
+                <div style={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: 8,
+                  background: "#F5ECD7",
+                  position: "absolute",
+                  top: 2,
+                  left: x402Enabled ? 18 : 2,
+                  transition: "left 0.2s",
+                }} />
+              </div>
+              <div>
+                <div style={{ color: x402Enabled ? "#A78BFA" : "#9A8060", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em" }}>
+                  ENABLE x402 CROSS-AGENT
+                </div>
+                <div style={{ color: "#5C4A32", fontSize: 10, marginTop: 2 }}>
+                  Allow other agents to hire this agent via AFC payments on Hedera
+                </div>
+              </div>
+            </label>
           </div>
 
           {/* Mint button */}

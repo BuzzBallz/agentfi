@@ -110,6 +110,8 @@ export interface RegisterAgentBody {
   system_prompt: string;
   token_id: number;
   price_per_call: number;
+  x402_enabled?: boolean;
+  allow_cross_agent?: boolean;
 }
 
 export async function registerAgent(body: RegisterAgentBody) {

@@ -350,6 +350,8 @@ class RegisterAgentRequest(BaseModel):
     system_prompt: str
     token_id: int
     price_per_call: float = 0.001
+    x402_enabled: bool = False
+    allow_cross_agent: bool = False
 
 
 @app.post("/agents/register")
@@ -370,6 +372,8 @@ async def register_dynamic_agent(body: RegisterAgentRequest) -> AgentResponse:
             system_prompt=body.system_prompt,
             token_id=body.token_id,
             price_per_call=body.price_per_call,
+            x402_enabled=body.x402_enabled,
+            allow_cross_agent=body.allow_cross_agent,
         )
         # Add to the live orchestrator registry so it's immediately executable
         AGENT_REGISTRY[agent_id] = agent

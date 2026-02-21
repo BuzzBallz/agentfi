@@ -6,6 +6,7 @@ and async Anthropic SDK clients) hangs on Windows/MINGW platforms.
 Wallet context is injected using the same pattern as static agents:
 - OG balance fetched via 0G Chain RPC (urllib, not httpx)
 - CoinGecko prices fetched via urllib
+- SaucerSwap pools and Bonzo Finance markets fetched via urllib
 - Concrete holdings prepended to user query
 """
 import asyncio
@@ -66,6 +67,60 @@ def _fetch_prices() -> str:
     except Exception as e:
         logger.debug("Failed to fetch prices: %s", e)
         return "Price data temporarily unavailable"
+
+
+def _fetch_saucerswap_pools() -> str:
+    """Fetch top SaucerSwap liquidity pools via urllib."""
+    try:
+        req = urllib.request.Request(
+            "https://api.saucerswap.finance/v2/pools",
+            headers={"Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            pools = json.loads(resp.read())
+        sorted_pools = sorted(pools, key=lambda p: float(p.get("tvl", 0) or 0), reverse=True)
+        result = [
+            {
+                "pair": f"{p.get('tokenA', {}).get('symbol', '?')}/{p.get('tokenB', {}).get('symbol', '?')}",
+                "tvl_usd": round(float(p.get("tvl", 0) or 0)),
+                "apr_pct": round(float(p.get("apr", 0) or 0), 2),
+            }
+            for p in sorted_pools[:10]
+            if float(p.get("tvl", 0) or 0) > 10000
+        ]
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        logger.debug("SaucerSwap fetch failed: %s", e)
+        return json.dumps([
+            {"pair": "HBAR/USDC", "tvl_usd": 5000000, "apr_pct": 12.5},
+            {"pair": "HBAR/HBARX", "tvl_usd": 3000000, "apr_pct": 18.2},
+            {"pair": "USDC/USDT", "tvl_usd": 8000000, "apr_pct": 4.1},
+            {"note": "SaucerSwap API unavailable — showing fallback data"},
+        ], indent=2)
+
+
+def _fetch_bonzo_markets() -> str:
+    """Fetch Bonzo Finance lending/borrowing markets via urllib."""
+    try:
+        req = urllib.request.Request(
+            "https://api.bonzo.finance/v1/markets",
+            headers={"Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.read().decode()
+    except Exception as e:
+        logger.debug("Bonzo Finance fetch failed: %s", e)
+        return json.dumps({
+            "protocol": "Bonzo Finance",
+            "chain": "Hedera",
+            "markets": [
+                {"asset": "HBAR", "supply_apy": 3.5, "borrow_apy": 5.2, "tvl": 8000000},
+                {"asset": "USDC", "supply_apy": 6.1, "borrow_apy": 8.4, "tvl": 12000000},
+                {"asset": "HBARX", "supply_apy": 7.8, "borrow_apy": 10.1, "tvl": 3000000},
+                {"asset": "SAUCE", "supply_apy": 9.2, "borrow_apy": 12.5, "tvl": 1500000},
+            ],
+            "note": "Bonzo Finance API unavailable — showing fallback data",
+        }, indent=2)
 
 
 def _call_anthropic(system: str, user_message: str) -> str:
@@ -144,16 +199,23 @@ class DynamicAgent(BaseAgent):
 
     async def execute(self, query: str, wallet_address: str | None = None) -> str:
         try:
-            # Fetch wallet context and prices in background threads (same pattern as static agents)
+            # Fetch all context in parallel (wallet, prices, Hedera DeFi data)
             wallet_banner = ""
             holdings_line = ""
             price_context = ""
 
+            # Always fetch Hedera DeFi data (SaucerSwap + Bonzo) in parallel
+            fetches = [
+                asyncio.to_thread(_fetch_saucerswap_pools),
+                asyncio.to_thread(_fetch_bonzo_markets),
+            ]
+
             if wallet_address:
-                bal_data, prices = await asyncio.gather(
-                    asyncio.to_thread(_fetch_wallet_balance, wallet_address),
-                    asyncio.to_thread(_fetch_prices),
-                )
+                fetches.insert(0, asyncio.to_thread(_fetch_wallet_balance, wallet_address))
+                fetches.insert(1, asyncio.to_thread(_fetch_prices))
+                results = await asyncio.gather(*fetches)
+                bal_data, prices, saucerswap_data, bonzo_data = results[0], results[1], results[2], results[3]
+
                 bal = bal_data["balance"]
                 sym = bal_data["symbol"]
                 chain = bal_data["chain"]
@@ -167,19 +229,30 @@ class DynamicAgent(BaseAgent):
                     f"That is 100% of my on-chain portfolio. "
                 )
                 price_context = prices
+            else:
+                results = await asyncio.gather(*fetches)
+                saucerswap_data, bonzo_data = results[0], results[1]
 
             # Enhance system prompt with context injection rules
             enhanced_system = self.system_prompt
+
+            # Inject Hedera DeFi data
+            enhanced_system += (
+                f"\n\nSAUCERSWAP DEX — TOP LIQUIDITY POOLS (live from SaucerSwap API):\n{saucerswap_data}\n\n"
+                f"BONZO FINANCE — LENDING/BORROWING MARKETS (live from Bonzo Finance API):\n{bonzo_data}\n\n"
+            )
+
             if price_context:
-                enhanced_system += (
-                    f"\n\nCURRENT MARKET PRICES (live from CoinGecko):\n{price_context}\n\n"
-                    "IMPORTANT RULES:\n"
-                    "- NEVER ask the user for more information. Always analyze with whatever data is provided.\n"
-                    "- Use the real-time prices above in your analysis.\n"
-                    "- If the user mentions token allocations (e.g. '80% ETH'), treat those as their portfolio.\n"
-                    "- Always give concrete numbers, tables, and actionable recommendations.\n"
-                    "- Format output as clean markdown with tables."
-                )
+                enhanced_system += f"CURRENT MARKET PRICES (live from CoinGecko):\n{price_context}\n\n"
+
+            enhanced_system += (
+                "IMPORTANT RULES:\n"
+                "- NEVER ask the user for more information. Always analyze with whatever data is provided.\n"
+                "- Use the real-time data above in your analysis.\n"
+                "- If the user mentions token allocations (e.g. '80% ETH'), treat those as their portfolio.\n"
+                "- Always give concrete numbers, tables, and actionable recommendations.\n"
+                "- Format output as clean markdown with tables."
+            )
 
             user_message = holdings_line + query
             llm_result = await asyncio.to_thread(_call_anthropic, enhanced_system, user_message)

@@ -85,7 +85,31 @@ def is_authorized_on_chain(token_id: int, wallet_address: str) -> bool:
 
 
 def get_registry_config(token_id: int) -> dict:
-    """Read agent config from the on-chain AgentRegistry contract."""
+    """Read agent config from the on-chain AgentRegistry contract.
+
+    Dynamic agents (token_id > 2) are not registered on-chain, so we check
+    the local dynamic registry first to avoid the contract returning default
+    (all-false) values for unknown token IDs.
+    """
+    # Dynamic agents: check local registry first (contract returns zeros for unknown IDs)
+    if token_id > 2:
+        from dynamic_registry import get_token_map, get_x402_config
+        tmap = get_token_map()
+        agent_id = tmap.get(token_id)
+        if agent_id:
+            x402_cfg = get_x402_config(agent_id)
+            if x402_cfg:
+                hedera_accounts = get_full_hedera_accounts()
+                return {
+                    "agent_hedera_account": hedera_accounts.get(token_id, ""),
+                    "owner_hedera_account": OPERATOR_HEDERA_ACCOUNT,
+                    "x402_enabled": x402_cfg.get("x402_enabled", False),
+                    "price_afc": x402_cfg.get("price_afc", 1.0),
+                    "price_usdt": 0.01,
+                    "max_budget_afc": x402_cfg.get("max_budget_afc", 5.0),
+                    "allow_cross_agent": x402_cfg.get("allow_cross_agent", False),
+                }
+
     try:
         if not AGENT_REGISTRY_ADDRESS:
             raise ValueError("AGENT_REGISTRY_ADDRESS not set")
@@ -144,10 +168,60 @@ def _local_fallback_config(token_id: int) -> dict:
         1: {"price_afc": 1.50, "price_usdt": 0.015, "max_budget_afc": 3.00, "allow_cross_agent": True},
         2: {"price_afc": 0.50, "price_usdt": 0.005, "max_budget_afc": 2.00, "allow_cross_agent": False},
     }
-    d = defaults.get(token_id, defaults[0])
+    if token_id in defaults:
+        d = defaults[token_id]
+    else:
+        # Check dynamic registry for non-static agents
+        from dynamic_registry import get_token_map, get_x402_config
+        tmap = get_token_map()
+        agent_id = tmap.get(token_id)
+        if agent_id:
+            x402_cfg = get_x402_config(agent_id)
+            if x402_cfg:
+                hedera_accounts = get_full_hedera_accounts()
+                return {
+                    "agent_hedera_account": hedera_accounts.get(token_id, ""),
+                    "owner_hedera_account": OPERATOR_HEDERA_ACCOUNT,
+                    "x402_enabled": x402_cfg.get("x402_enabled", False),
+                    "price_afc": x402_cfg.get("price_afc", 1.0),
+                    "price_usdt": 0.01,
+                    "max_budget_afc": x402_cfg.get("max_budget_afc", 5.0),
+                    "allow_cross_agent": x402_cfg.get("allow_cross_agent", False),
+                }
+        d = {"price_afc": 1.00, "price_usdt": 0.01, "max_budget_afc": 5.00, "allow_cross_agent": False}
     return {
-        "agent_hedera_account": AGENT_HEDERA_ACCOUNTS.get(token_id, ""),
+        "agent_hedera_account": AGENT_HEDERA_ACCOUNTS.get(token_id, get_full_hedera_accounts().get(token_id, "")),
         "owner_hedera_account": OPERATOR_HEDERA_ACCOUNT,
         "x402_enabled": True,
         **d,
     }
+
+
+# ─── Dynamic-aware lookup functions ───────────────────────────
+
+
+def get_full_agent_name_to_token_id() -> dict[str, int]:
+    """Merge static AGENT_NAME_TO_TOKEN_ID with dynamic agents."""
+    from dynamic_registry import get_token_map
+    merged = dict(AGENT_NAME_TO_TOKEN_ID)
+    tmap = get_token_map()
+    for token_id, agent_id in tmap.items():
+        if agent_id not in merged:
+            merged[agent_id] = token_id
+    return merged
+
+
+def get_full_hedera_accounts() -> dict[int, str]:
+    """Merge static AGENT_HEDERA_ACCOUNTS with dynamic agents."""
+    from dynamic_registry import get_all_hedera_accounts
+    return get_all_hedera_accounts()
+
+
+def get_full_cross_agent_recommendations(caller_name: str) -> list[str]:
+    """Static recommendations + all dynamic agents with x402 enabled."""
+    from dynamic_registry import get_x402_enabled_agents
+    static = list(CROSS_AGENT_RECOMMENDATIONS.get(caller_name, []))
+    for agent_id in get_x402_enabled_agents():
+        if agent_id != caller_name and agent_id not in static:
+            static.append(agent_id)
+    return static
