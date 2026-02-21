@@ -12,6 +12,7 @@ import { CONTRACT_ADDRESSES } from "@/config/contracts"
 import { useAppMode } from "@/context/AppModeContext"
 import { useEarnings, formatEarnings } from "@/hooks/useEarnings"
 import { useLiveActivity } from "@/hooks/useLiveActivity"
+import FadeContent from "@/components/FadeContent"
 
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] })
 const dmSans = DM_Sans({ subsets: ["latin"] })
@@ -367,25 +368,35 @@ export default function DashboardPage() {
 
       {/* ── Section 3: Create & Mint New Agent CTA ── */}
       <div style={{
-        background: "#2E2010",
-        border: "1px solid #5C4422",
-        borderRadius: 12,
-        padding: 28,
         display: "flex",
-        justifyContent: "space-between",
         alignItems: "center",
+        justifyContent: "space-between",
+        padding: "48px 0 32px",
         gap: 24,
-        flexWrap: "wrap" as const,
         marginBottom: 36,
       }}>
-        <div>
-          <div className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
-            Create &amp; Mint New Agent
+        <FadeContent blur duration={900} delay={100}>
+          <div>
+            <h2 style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: "clamp(20px, 2.5vw, 32px)",
+              fontWeight: 700,
+              color: "#F5ECD7",
+              marginBottom: 8,
+            }}>
+              Create &amp; Mint New Agent
+            </h2>
+            <p style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 11,
+              color: "#5C4422",
+              letterSpacing: "0.1em",
+              margin: 0,
+            }}>
+              Deploy your agent as an ERC-7857 iNFT on 0G Chain
+            </p>
           </div>
-          <div style={{ color: "#9A8060", fontSize: 14 }}>
-            Deploy your own AI agent as an ERC-7857 iNFT on 0G Chain
-          </div>
-        </div>
+        </FadeContent>
         <button
           onClick={() => router.push("/dashboard/create")}
           className={spaceMono.className}
@@ -399,6 +410,7 @@ export default function DashboardPage() {
             fontWeight: 700,
             letterSpacing: "0.05em",
             cursor: "pointer",
+            flexShrink: 0,
           }}
         >
           Create Agent &rarr;
