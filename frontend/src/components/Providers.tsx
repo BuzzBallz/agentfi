@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { wagmiConfig, ogTestnet, adiTestnet } from "@/config/chains";
@@ -35,6 +35,13 @@ function InnerProviders({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           initialChain={isCompliant ? adiTestnet : ogTestnet}
+          theme={darkTheme({
+            accentColor: "#C9A84C",
+            accentColorForeground: "#0D0802",
+            borderRadius: "medium",
+            fontStack: "system",
+            overlayBlur: "small",
+          })}
         >
           {children}
         </RainbowKitProvider>

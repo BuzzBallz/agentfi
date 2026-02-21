@@ -20,3 +20,13 @@
   from { opacity: 0; transform: translateX(-8px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+/* RainbowKit modal overrides */
+[data-rk] {
+  --rk-colors-modalBackground: #1A1208 !important;
+  --rk-colors-modalBorder: #3D2E1A !important;
+  --rk-colors-actionButtonBorder: #3D2E1A !important;
+  --rk-colors-connectButtonBackground: #1A1208 !important;
+  --rk-colors-menuItemBackground: #241A0E !important;
+  --rk-fonts-body: 'Space Mono', monospace !important;
+}
