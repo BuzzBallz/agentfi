@@ -83,5 +83,6 @@ To activate x402 (Kite AI) when ready:
 4. Swap MockPaymentProvider → X402PaymentProvider in agents/api.py
 5. No other file needs to change.
 
-## CRITICAL RULE
+## CRITICAL RULES
 Never put Claude Code in co author in GitHub commits.
+Always use CK instead of grep to search/discover the codebase

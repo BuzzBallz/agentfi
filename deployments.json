@@ -1,11 +1,19 @@
 {
   "16602": {
     "chainName": "0G Galileo Testnet",
-    "AgentNFT": "0xE79Bf574BfCfC17bA858CC311CE5FeF8B78e947B",
-    "AgentMarketplace": "0xC203E2686601Cc252EcE66F8c792FF88E8fbDD9b"
+    "AgentNFT": "0xDCD2e9B068913fcF0C80ff5DA070B243Df091EFE",
+    "AgentMarketplace": "0x0eC3981a544C3dC6983C523860E13c2B7a66cd6e",
+    "AgentRegistry": "0xa259E6D0a4F740AD8879EA433Ba56B1C5A9e1a5B"
   },
   "99999": {
     "chainName": "ADI Testnet",
-    "AgentPayment": "0x10e3399025e930da7b4d4be71181157ccee4e882"
+    "AgentPayment": "0x10e3399025e930da7b4d4be71181157ccee4e882",
+    "ADIAgentPayments": "0x56FEa0d531faC7a870F0cdC5dBFB57a6C6182cDd",
+    "AgentFiPaymaster": "0xBeD159217F43711c32fB6D57e4b203aEbC46B74A",
+    "entryPoint": "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+  },
+  "2368": {
+    "chainName": "KiteAI Testnet",
+    "KiteAgentFiService": "0x10E3399025E930da7B4d4bE71181157CCee4E882"
   }
 }

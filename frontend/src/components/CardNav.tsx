@@ -23,7 +23,7 @@ const NAV_ITEMS = [
     bgColor: "#2E2010",
     textColor: "#F5ECD7",
     links: [
-      { label: "My Agents (iNFTs)", href: "/my-agents",   ariaLabel: "View owned iNFTs" },
+      { label: "My Agents (iNFTs)", href: "/dashboard",   ariaLabel: "View owned iNFTs" },
       { label: "Transaction History",href: "/dashboard",  ariaLabel: "View transactions" },
     ],
   },

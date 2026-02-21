@@ -33,22 +33,37 @@ class PortfolioAnalyzerAgent(BaseAgent):
             ])
 
             # 2b. Fetch wallet balances if address provided
-            wallet_context = ""
+            wallet_banner = ""
+            holdings_line = ""
             if wallet_address:
                 balances = await get_wallet_balances(wallet_address)
-                wallet_context = f"""
-
-CONNECTED WALLET: {wallet_address}
-WALLET DATA: {json.dumps(balances, indent=2)}
-The user is connected with this wallet. Reference their address and real balance in your analysis.
-If they ask about "my portfolio", use their actual on-chain data."""
+                native = balances.get("native_balance", {})
+                bal_amount = native.get("balance", 0)
+                bal_symbol = native.get("symbol", "OG")
+                chain_name = balances.get("chain", "0G-Galileo-Testnet")
+                # Deterministic banner prepended to output (Python-rendered, LLM never touches this)
+                wallet_banner = (
+                    f"## Connected Wallet\n"
+                    f"- **Address:** `{wallet_address}`\n"
+                    f"- **Balance:** {bal_amount} {bal_symbol} on {chain_name}\n\n"
+                    f"---\n\n"
+                )
+                # Concrete holdings injected into the query
+                holdings_line = (
+                    f"I hold {bal_amount} {bal_symbol} (0G Chain native gas token) on {chain_name}. "
+                    f"That is 100% of my on-chain portfolio. "
+                )
 
             # 3. Ask Claude to analyze with real data
             system_prompt = f"""You are a DeFi portfolio analyzer with access to REAL-TIME market data.
 
 CURRENT MARKET PRICES (live from CoinGecko):
 {price_context}
-{wallet_context}
+
+IMPORTANT RULES:
+- NEVER ask the user for more information. Always analyze with whatever data is provided.
+- If the user only holds one token, analyze that single-token portfolio.
+- OG is the native gas token of 0G Chain (a testnet token with no USD market price).
 
 Your job:
 1. Parse the user's portfolio allocation from their query
@@ -64,16 +79,19 @@ Format your response as a structured analysis with sections:
 - Concentration Risk Assessment
 - Key Observations"""
 
+            user_message = holdings_line + query
+
             client = AsyncAnthropic()
             response = await client.messages.create(
                 model="claude-haiku-4-5-20251001",
                 max_tokens=600,
                 system=system_prompt,
                 messages=[
-                    {"role": "user", "content": query},
+                    {"role": "user", "content": user_message},
                 ],
             )
-            return response.content[0].text or ""
+            llm_result = response.content[0].text or ""
+            return wallet_banner + llm_result
         except Exception as e:
             logger.error(f"Portfolio analyzer error: {e}")
             return f"Portfolio analysis error: {str(e)}"

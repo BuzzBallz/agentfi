@@ -41,14 +41,24 @@ class YieldOptimizerAgent(BaseAgent):
             bonzo_context = "\n".join(bonzo_lines)
 
             # 4. Fetch wallet balances if address provided
-            wallet_context = ""
+            wallet_banner = ""
+            holdings_line = ""
             if wallet_address:
                 balances = await get_wallet_balances(wallet_address)
-                wallet_context = f"""
-
-CONNECTED WALLET: {wallet_address}
-WALLET DATA: {json.dumps(balances, indent=2)}
-The user is connected with this wallet. Reference their address and real balance in your recommendations."""
+                native = balances.get("native_balance", {})
+                bal_amount = native.get("balance", 0)
+                bal_symbol = native.get("symbol", "OG")
+                chain_name = balances.get("chain", "0G-Galileo-Testnet")
+                wallet_banner = (
+                    f"## Connected Wallet\n"
+                    f"- **Address:** `{wallet_address}`\n"
+                    f"- **Balance:** {bal_amount} {bal_symbol} on {chain_name}\n\n"
+                    f"---\n\n"
+                )
+                holdings_line = (
+                    f"I hold {bal_amount} {bal_symbol} (0G Chain native gas token) on {chain_name}. "
+                    f"That is 100% of my on-chain portfolio. "
+                )
 
             # 5. Ask Claude to recommend with real data
             system_prompt = f"""You are a DeFi yield optimizer with access to REAL-TIME yield data.
@@ -58,7 +68,10 @@ LIVE YIELD OPPORTUNITIES (from DeFi Llama):
 
 HEDERA ECOSYSTEM — BONZO FINANCE (Hedera-native lending):
 {bonzo_context}
-{wallet_context}
+
+IMPORTANT RULES:
+- NEVER ask the user for more information. Always recommend with whatever data is provided.
+- OG is the native gas token of 0G Chain (a testnet token).
 
 Your job:
 1. Parse the user's risk profile and asset preferences from their query
@@ -77,16 +90,19 @@ Format as a structured recommendation with:
 - Hedera Opportunity (Bonzo Finance)
 - Portfolio Allocation Suggestion"""
 
+            user_message = holdings_line + query
+
             client = AsyncAnthropic()
             response = await client.messages.create(
                 model="claude-haiku-4-5-20251001",
                 max_tokens=700,
                 system=system_prompt,
                 messages=[
-                    {"role": "user", "content": query},
+                    {"role": "user", "content": user_message},
                 ],
             )
-            return response.content[0].text or ""
+            llm_result = response.content[0].text or ""
+            return wallet_banner + llm_result
         except Exception as e:
             logger.error(f"Yield optimizer error: {e}")
             return f"Yield optimization error: {str(e)}"

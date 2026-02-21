@@ -1,14 +1,17 @@
 "use client"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
+import { useDisconnect } from "wagmi"
 import { useState } from "react"
 import GlitchText from "./GlitchText"
 
 export default function WalletConnect() {
   const [hovered, setHovered] = useState(false)
+  const [accountHovered, setAccountHovered] = useState(false)
+  const { disconnect } = useDisconnect()
 
   return (
     <ConnectButton.Custom>
-      {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
+      {({ account, chain, openChainModal, openConnectModal, mounted }) => {
         const ready = mounted
         if (!ready) return null
 
@@ -37,32 +40,30 @@ export default function WalletConnect() {
                 {chain.name}
               </button>
 
-              {/* Account button */}
+              {/* Account button — hover to see Disconnect, click to disconnect */}
               <button
-                onClick={openAccountModal}
+                onClick={() => disconnect()}
+                onMouseEnter={() => setAccountHovered(true)}
+                onMouseLeave={() => setAccountHovered(false)}
                 style={{
-                  background: "#241A0E",
-                  border: "1px solid #5C4422",
+                  background: accountHovered ? "#2E1010" : "#241A0E",
+                  border: `1px solid ${accountHovered ? "#C45A5A" : "#5C4422"}`,
                   borderRadius: 8,
                   padding: "6px 16px",
-                  color: "#C9A84C",
+                  color: accountHovered ? "#C45A5A" : "#C9A84C",
                   fontFamily: "monospace",
                   fontSize: 12,
                   fontWeight: "bold",
                   cursor: "pointer",
                   letterSpacing: "0.08em",
-                  transition: "background 0.2s, border-color 0.2s",
-                }}
-                onMouseOver={e => {
-                  e.currentTarget.style.background = "#2E2010"
-                  e.currentTarget.style.borderColor = "#C9A84C"
-                }}
-                onMouseOut={e => {
-                  e.currentTarget.style.background = "#241A0E"
-                  e.currentTarget.style.borderColor = "#5C4422"
+                  transition: "background 0.2s, border-color 0.2s, color 0.2s",
+                  minWidth: 120,
+                  textAlign: "center",
                 }}
               >
-                {account.address.slice(0, 4)}****{account.address.slice(-4)}
+                {accountHovered
+                  ? "Disconnect"
+                  : `${account.address.slice(0, 4)}****${account.address.slice(-4)}`}
               </button>
             </div>
           )

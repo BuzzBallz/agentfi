@@ -1,64 +1,160 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Space_Mono, DM_Sans } from "next/font/google"
 import { useAccount } from "wagmi"
-import GlareHover from "@/components/GlareHover"
+import { formatEther } from "viem"
+import PixelTransition from "@/components/PixelTransition"
+import { useMyAgents } from "@/hooks/useMyAgents"
+import { useAgentData, useTokenImage } from "@/hooks/useAgentData"
+import { CONTRACT_ADDRESSES } from "@/config/contracts"
+import { useAppMode } from "@/context/AppModeContext"
+import { useEarnings, formatEarnings } from "@/hooks/useEarnings"
+import { useLiveActivity } from "@/hooks/useLiveActivity"
 
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] })
 const dmSans = DM_Sans({ subsets: ["latin"] })
 
 function shortenAddress(address: string): string {
-  return `${address.slice(0, 4)}****${address.slice(-4)}`
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
-const AGENTS = [
-  { name: "Portfolio Analyzer", status: "active" as const, nftId: "#0042", chain: "0G Chain", lastRun: "2 min ago", earnings: "0.012 ADI" },
-  { name: "Yield Optimizer", status: "active" as const, nftId: "#0087", chain: "0G Chain", lastRun: "5 min ago", earnings: "0.008 ADI" },
-  { name: "Risk Scorer", status: "idle" as const, nftId: "#0103", chain: "0G Chain", lastRun: "1 hr ago", earnings: "0.011 ADI" },
-]
+const FALLBACK_NAMES: Record<number, string> = {
+  0: "Portfolio Analyzer",
+  1: "Yield Optimizer",
+  2: "Risk Scorer",
+}
 
-const FEED_LINES = [
-  { time: "14:32", agent: "Portfolio Analyzer", msg: "Scanning wallet 0x3f...a2 \u2713", ok: true },
-  { time: "14:31", agent: "Risk Scorer", msg: "ETH exposure: HIGH \u2014 score 7.2/10", ok: false },
-  { time: "14:30", agent: "Yield Optimizer", msg: "Found: Aave v3 USDC pool \u2014 APY 12.4%", ok: true },
-  { time: "14:28", agent: "Portfolio Analyzer", msg: "Rebalance recommendation generated", ok: true },
-  { time: "14:25", agent: "ADI Chain", msg: "Payment 0.01 ADI settled \u2713", ok: true },
-  { time: "14:22", agent: "0G Chain", msg: "iNFT #0042 state updated \u2713", ok: true },
-  { time: "14:20", agent: "Hedera", msg: "Agent registered via HCS-10 \u2713", ok: true },
-]
+/* ── Agent Card with SVG ── */
+function DashboardAgentCard({ tokenId, pricePerHire }: { tokenId: number; pricePerHire: bigint }) {
+  const router = useRouter()
+  const { agentData, tokenURI, isLoading } = useAgentData(tokenId)
+  const { imageUrl, fallbackSvg } = useTokenImage(tokenURI, tokenId)
+  const { currencySymbol } = useAppMode()
+  const name = isLoading ? "Loading..." : (agentData?.name || FALLBACK_NAMES[tokenId] || `Agent #${tokenId}`)
 
-const STATS = [
-  { label: "Total ADI Earned", value: "0.031 ADI" },
-  { label: "Queries Executed", value: "47" },
-  { label: "Avg Response Time", value: "3.2s" },
-  { label: "iNFTs Owned", value: "3" },
-]
+  const btnStyle = {
+    position: "absolute" as const,
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontFamily: "monospace",
+    fontSize: 11,
+    fontWeight: "bold" as const,
+    letterSpacing: "0.08em",
+    borderRadius: 8,
+    cursor: "pointer",
+  }
 
-const ALLOCATIONS = [
-  { asset: "ETH", pct: 40 },
-  { asset: "BTC", pct: 30 },
-  { asset: "USDC", pct: 20 },
-  { asset: "Other", pct: 10 },
-]
+  return (
+    <div
+      style={{
+        background: "#241A0E",
+        border: "1px solid #3D2E1A",
+        borderRadius: 12,
+        padding: 20,
+        opacity: isLoading ? 0.7 : 1,
+        transition: "border-color 0.2s",
+      }}
+      onMouseOver={e => (e.currentTarget.style.borderColor = "#5C4422")}
+      onMouseOut={e => (e.currentTarget.style.borderColor = "#3D2E1A")}
+    >
+      {/* SVG image */}
+      {imageUrl && (
+        <div style={{
+          borderRadius: 8,
+          overflow: "hidden",
+          marginBottom: 12,
+          background: "#1A1208",
+          display: "flex",
+          justifyContent: "center",
+          maxHeight: 140,
+        }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt={`${name} iNFT`}
+            style={{ maxWidth: "100%", maxHeight: 140, objectFit: "contain" }}
+            onError={(e) => { if (fallbackSvg) (e.target as HTMLImageElement).src = fallbackSvg; }}
+          />
+        </div>
+      )}
 
-const QUICK_ACTIONS = [
-  { title: "Hire New Agent", desc: "Browse the marketplace", cta: "Explore \u2192", href: "/marketplace" },
-  { title: "Transfer iNFT", desc: "Send agent to new owner", cta: "Transfer \u2192", href: "#" },
-  { title: "View on 0G Chain", desc: "Inspect on-chain state", cta: "Explorer \u2192", href: "#" },
-]
+      {/* Token badge */}
+      <span
+        className={spaceMono.className}
+        style={{
+          background: "#1A1208",
+          border: "1px solid #5C4422",
+          color: "#C9A84C",
+          fontSize: 11,
+          padding: "3px 8px",
+          borderRadius: 6,
+        }}
+      >
+        #{tokenId}
+      </span>
 
+      {/* Name */}
+      <div className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 16, fontWeight: 700, marginTop: 10 }}>
+        {name}
+      </div>
+
+      {/* Standard */}
+      <div style={{ color: "#9A8060", fontSize: 11, marginTop: 4, marginBottom: 14 }}>
+        ERC-7857 &middot; 0G Chain
+      </div>
+
+      {/* Price */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <span className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 13 }}>
+          {formatEther(pricePerHire)} {currencySymbol}
+        </span>
+        <span style={{ color: "#5C4A32", fontSize: 10 }}>per hire</span>
+      </div>
+
+      {/* Execute button */}
+      <div style={{ position: "relative", width: "fit-content" }}>
+        <PixelTransition
+          gridSize={6}
+          pixelColor="#C9A84C"
+          animationStepDuration={0.2}
+          aspectRatio="0%"
+          style={{ width: 120, height: 36, borderRadius: 8, overflow: "hidden" }}
+          firstContent={
+            <div style={{ ...btnStyle, background: "#C9A84C", color: "#1A1208" }}
+              onClick={() => router.push(`/agent/${tokenId}`)}>Execute</div>
+          }
+          secondContent={
+            <div style={{ ...btnStyle, background: "#E8C97A", color: "#1A1208" }}
+              onClick={() => router.push(`/agent/${tokenId}`)}>Execute</div>
+          }
+        />
+      </div>
+    </div>
+  )
+}
+
+/* ── Main Dashboard Page ── */
 export default function DashboardPage() {
-  const { address, isConnected } = useAccount()
+  const router = useRouter()
+  const { address, isConnected, status: accountStatus } = useAccount()
+  const { myAgents, isLoading, isError } = useMyAgents()
+  const { totalEarned, totalHires, loading: earningsLoading } = useEarnings()
+  const { lines: activityLines, loading: activityLoading } = useLiveActivity()
+  // Only show "connect wallet" when truly disconnected, not during reconnection
+  const isDisconnected = accountStatus === "disconnected"
   const [visibleFeed, setVisibleFeed] = useState(0)
 
   useEffect(() => {
-    if (visibleFeed >= FEED_LINES.length) return
+    if (visibleFeed >= activityLines.length) return
     const timeout = setTimeout(() => {
       setVisibleFeed(prev => prev + 1)
     }, 350)
     return () => clearTimeout(timeout)
-  }, [visibleFeed])
+  }, [visibleFeed, activityLines.length])
 
   const cardStyle = {
     background: "#241A0E",
@@ -78,7 +174,7 @@ export default function DashboardPage() {
               className={spaceMono.className}
               style={{ fontSize: 32, fontWeight: 700, color: "#F5ECD7", letterSpacing: "0.02em", margin: 0 }}
             >
-              Agents Dashboard
+              Agent Dashboard
             </h1>
             <p style={{ color: "#9A8060", fontSize: 14, marginTop: 6 }}>
               Manage your autonomous AI agents
@@ -103,104 +199,263 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Section 1: Agent Roster ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 36 }}>
-        {AGENTS.map((agent) => (
-          <div key={agent.name} style={cardStyle}>
-            {/* Name + Status */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <span className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 14, fontWeight: 700 }}>
-                {agent.name}
-              </span>
-              <span
-                className={spaceMono.className}
-                style={{
-                  fontSize: 10,
-                  letterSpacing: "0.08em",
-                  color: agent.status === "active" ? "#7A9E6E" : "#5C4A32",
-                }}
-              >
-                ● {agent.status === "active" ? "ACTIVE" : "IDLE"}
-              </span>
-            </div>
+      {/* ── Section 1: My Agents (real on-chain data) ── */}
+      <div style={{ marginBottom: 36 }}>
+        <div className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 14, fontWeight: 700, marginBottom: 16 }}>
+          MY AGENTS
+        </div>
 
-            {/* Details */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#9A8060", fontSize: 11 }}>iNFT</span>
-                <span className={spaceMono.className} style={{ color: "#5C4A32", fontSize: 11 }}>{agent.nftId}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#9A8060", fontSize: 11 }}>Chain</span>
-                <span style={{ color: "#9A8060", fontSize: 11 }}>{agent.chain}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#9A8060", fontSize: 11 }}>Last run</span>
-                <span style={{ color: "#5C4A32", fontSize: 11 }}>{agent.lastRun}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#9A8060", fontSize: 11 }}>Earned</span>
-                <span className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 11 }}>{agent.earnings}</span>
-              </div>
+        {/* Not connected state — only when truly disconnected, not during reconnection */}
+        {isDisconnected && (
+          <div style={{
+            ...cardStyle,
+            textAlign: "center" as const,
+            padding: 48,
+          }}>
+            <div className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+              Connect Your Wallet
             </div>
-
-            {/* Run Agent button */}
-            <GlareHover
-              width="100%"
-              height="34px"
-              background="#1A1208"
-              borderRadius="8px"
-              borderColor="#5C4422"
-              glareColor="#C9A84C"
-              glareOpacity={0.2}
-              glareAngle={-45}
-              glareSize={250}
-              transitionDuration={500}
-            >
-              <span
-                className={spaceMono.className}
-                style={{ color: "#C9A84C", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em" }}
-              >
-                Run Agent
-              </span>
-            </GlareHover>
+            <div style={{ color: "#9A8060", fontSize: 14 }}>
+              Connect your wallet to view your agent iNFTs
+            </div>
           </div>
-        ))}
+        )}
+
+        {/* Loading */}
+        {!isDisconnected && isLoading && (
+          <div className={spaceMono.className} style={{ color: "#9A8060", fontSize: 13, textAlign: "center" }}>
+            Loading your agents from 0G Chain...
+          </div>
+        )}
+
+        {/* Error */}
+        {!isDisconnected && isError && (
+          <div className={spaceMono.className} style={{ color: "#C47A5A", fontSize: 13, textAlign: "center" }}>
+            Failed to load agents. Check RPC connection.
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!isDisconnected && !isLoading && !isError && myAgents.length === 0 && (
+          <div style={{
+            ...cardStyle,
+            textAlign: "center" as const,
+            padding: 48,
+          }}>
+            <div className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
+              No Agents Owned Yet
+            </div>
+            <div style={{ color: "#9A8060", fontSize: 14, marginBottom: 20 }}>
+              Hire an agent from the marketplace to get started
+            </div>
+            <a
+              href="/marketplace"
+              className={spaceMono.className}
+              style={{
+                background: "#C9A84C",
+                color: "#1A1208",
+                border: "none",
+                borderRadius: 8,
+                padding: "10px 24px",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+                textDecoration: "none",
+              }}
+            >
+              Browse Marketplace &rarr;
+            </a>
+          </div>
+        )}
+
+        {/* Agent grid */}
+        {myAgents.length > 0 && (
+          <>
+            {/* Wallet summary bar */}
+            <div style={{
+              ...cardStyle,
+              display: "flex",
+              alignItems: "center",
+              gap: 0,
+              marginBottom: 20,
+              padding: "14px 20px",
+            }}>
+              <span className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 14, flex: 1, textAlign: "center" }}>
+                {myAgents.length} iNFTs Owned
+              </span>
+              <div style={{ width: 1, height: 24, background: "#3D2E1A" }} />
+              <span className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 14, flex: 1, textAlign: "center" }}>
+                {address ? shortenAddress(address) : ""}
+              </span>
+              <div style={{ width: 1, height: 24, background: "#3D2E1A" }} />
+              <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 14, flex: 1, textAlign: "center" }}>
+                0G Chain &middot; Testnet
+              </span>
+            </div>
+
+            {/* NFT import tip */}
+            <div style={{
+              fontSize: 12,
+              color: "#9A8060",
+              background: "rgba(26,18,8,0.5)",
+              borderRadius: 8,
+              padding: 12,
+              marginBottom: 20,
+              border: "1px solid #3D2E1A",
+              lineHeight: 1.6,
+            }}>
+              <span style={{ color: "#C9A84C", fontWeight: 700 }}>Tip:</span>{" "}
+              To see your iNFTs in MetaMask: NFTs tab &rarr; Import NFT &rarr;
+              Contract: <span className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 11 }}>{CONTRACT_ADDRESSES.AgentNFT}</span> &rarr;
+              Token ID: <span className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 11 }}>0</span> (or 1, 2)
+            </div>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${Math.min(myAgents.length, 3)}, 1fr)`,
+              gap: 20,
+            }}>
+              {myAgents.map(agent => (
+                <DashboardAgentCard
+                  key={agent.tokenId}
+                  tokenId={agent.tokenId}
+                  pricePerHire={agent.pricePerHire}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* ── Section 2: Live Feed + Stats ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16, marginBottom: 36 }}>
+      {/* ── Section 2: Earnings Summary (real on-chain data from AgentHired events) ── */}
+      <div style={{ ...cardStyle, marginBottom: 36 }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+          <span className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 14, fontWeight: 700 }}>
+            Earnings Summary
+          </span>
+          {earningsLoading && (
+            <span style={{ color: "#5C4A32", fontSize: 10, marginLeft: 10 }}>loading...</span>
+          )}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+          <div>
+            <div className={spaceMono.className} style={{ color: "#5C4A32", fontSize: 10, letterSpacing: "0.08em", marginBottom: 4 }}>
+              TOTAL EARNED (97.5%)
+            </div>
+            <div className={spaceMono.className} style={{ color: totalEarned > BigInt(0) ? "#7A9E6E" : "#F5ECD7", fontSize: 20, fontWeight: 700 }}>
+              {formatEarnings(totalEarned)} A0GI
+            </div>
+          </div>
+          <div>
+            <div className={spaceMono.className} style={{ color: "#5C4A32", fontSize: 10, letterSpacing: "0.08em", marginBottom: 4 }}>
+              TOTAL HIRES
+            </div>
+            <div className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 20, fontWeight: 700 }}>
+              {totalHires}
+            </div>
+          </div>
+          <div>
+            <div className={spaceMono.className} style={{ color: "#5C4A32", fontSize: 10, letterSpacing: "0.08em", marginBottom: 4 }}>
+              iNFTs OWNED
+            </div>
+            <div className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 20, fontWeight: 700 }}>
+              {myAgents.length}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Section 3: Create & Mint New Agent CTA ── */}
+      <div style={{
+        background: "#2E2010",
+        border: "1px solid #5C4422",
+        borderRadius: 12,
+        padding: 28,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 24,
+        flexWrap: "wrap" as const,
+        marginBottom: 36,
+      }}>
+        <div>
+          <div className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
+            Create &amp; Mint New Agent
+          </div>
+          <div style={{ color: "#9A8060", fontSize: 14 }}>
+            Deploy your own AI agent as an ERC-7857 iNFT on 0G Chain
+          </div>
+        </div>
+        <button
+          onClick={() => router.push("/dashboard/create")}
+          className={spaceMono.className}
+          style={{
+            background: "#C9A84C",
+            color: "#1A1208",
+            border: "none",
+            borderRadius: 8,
+            padding: "12px 28px",
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: "0.05em",
+            cursor: "pointer",
+          }}
+        >
+          Create Agent &rarr;
+        </button>
+      </div>
+
+      {/* ── Section 4: Live Activity & Performance ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16 }}>
 
         {/* LEFT — Live Activity Feed */}
         <div style={cardStyle}>
-          <div className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 14, fontWeight: 700, marginBottom: 18 }}>
-            Live Activity
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+            <span className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 14, fontWeight: 700 }}>
+              Live Activity
+            </span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {FEED_LINES.slice(0, visibleFeed).map((line, i) => (
+            {activityLoading && (
+              <div style={{ fontFamily: "monospace", fontSize: 12, color: "#5C4A32", textAlign: "center", padding: "20px 0" }}>
+                Loading on-chain activity...
+              </div>
+            )}
+            {!activityLoading && activityLines.length === 0 && (
+              <div style={{ fontFamily: "monospace", fontSize: 12, color: "#5C4A32", textAlign: "center", padding: "20px 0" }}>
+                No activity yet — hire an agent to see live logs
+              </div>
+            )}
+            {activityLines.slice(0, visibleFeed).map((line, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontFamily: "monospace", fontSize: 12, lineHeight: 1.6 }}>
-                <span style={{ color: "#5C4A32", flexShrink: 0, minWidth: 40 }}>{line.time}</span>
+                <span style={{ color: "#5C4A32", flexShrink: 0, minWidth: 50 }}>{line.time}</span>
                 <span style={{ color: "#C9A84C", flexShrink: 0 }}>[{line.agent}]</span>
                 <span style={{ color: line.ok ? "#F5ECD7" : "#C47A5A" }}>{line.msg}</span>
               </div>
             ))}
-            {visibleFeed < FEED_LINES.length && (
+            {visibleFeed < activityLines.length && (
               <div style={{ fontFamily: "monospace", fontSize: 12 }}>
-                <span style={{ animation: "blink 1s infinite", color: "#C9A84C" }}>▋</span>
+                <span style={{ animation: "blink 1s infinite", color: "#C9A84C" }}>{"\u258B"}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* RIGHT — Performance Stats + Allocation */}
+        {/* RIGHT — Performance Stats (real on-chain) */}
         <div style={cardStyle}>
-          <div className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 14, fontWeight: 700, marginBottom: 18 }}>
-            Performance
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+            <span className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 14, fontWeight: 700 }}>
+              Performance
+            </span>
           </div>
 
-          {/* Stat rows */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 0, marginBottom: 24 }}>
-            {STATS.map((stat) => (
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {[
+              { label: "Total Earned", value: `${formatEarnings(totalEarned)} A0GI` },
+              { label: "Total Hires", value: String(totalHires) },
+              { label: "iNFTs Owned", value: String(myAgents.length) },
+              { label: "Payment Split", value: "97.5% / 2.5%" },
+            ].map((stat) => (
               <div
                 key={stat.label}
                 style={{
@@ -216,56 +471,7 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-
-          {/* Allocation bars */}
-          <div className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11, letterSpacing: "0.1em", marginBottom: 12 }}>
-            ALLOCATION
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {ALLOCATIONS.map((item) => (
-              <div key={item.asset}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 12 }}>{item.asset}</span>
-                  <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 12 }}>{item.pct}%</span>
-                </div>
-                <div style={{ background: "#1A1208", borderRadius: 4, height: 8, overflow: "hidden" }}>
-                  <div style={{ width: `${item.pct}%`, height: "100%", background: "#C9A84C", borderRadius: 4 }} />
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-      </div>
-
-      {/* ── Section 3: Quick Actions ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        {QUICK_ACTIONS.map((action) => (
-          <GlareHover
-            key={action.title}
-            width="100%"
-            height="auto"
-            background="#241A0E"
-            borderRadius="12px"
-            borderColor="#3D2E1A"
-            glareColor="#C9A84C"
-            glareOpacity={0.2}
-            glareAngle={-45}
-            glareSize={250}
-            transitionDuration={600}
-          >
-            <a href={action.href} style={{ padding: 24, width: "100%", display: "block", textDecoration: "none" }}>
-              <div className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
-                {action.title}
-              </div>
-              <div style={{ color: "#9A8060", fontSize: 13, marginBottom: 16 }}>
-                {action.desc}
-              </div>
-              <div className={spaceMono.className} style={{ color: "#C9A84C", fontSize: 12, letterSpacing: "0.05em", fontWeight: 700 }}>
-                {action.cta}
-              </div>
-            </a>
-          </GlareHover>
-        ))}
       </div>
     </div>
   )

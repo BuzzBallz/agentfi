@@ -12,6 +12,14 @@ contracts/out/
 # ABIs are synced MANUALLY to frontend/src/abi/ by Person A after each deploy.
 # Never commit compiled artifacts — only the manually synced ABIs.
 
+# ─── Hardhat / ADI (zkSync) ────────────────────────────────────────
+contracts-adi/artifacts/
+contracts-adi/artifacts-zk/
+contracts-adi/cache/
+contracts-adi/cache-zk/
+contracts-adi/node_modules/
+contracts-adi/.zksolc-libraries-cache/
+
 # ─── Next.js ────────────────────────────────────────────────────────
 frontend/.next/
 frontend/out/
@@ -29,6 +37,7 @@ agents/.pytest_cache/
 
 # ─── Hedera ────────────────────────────────────────────────────────
 agents/hedera_token.json
+agents/dynamic_agents.json
 
 # ─── pnpm ───────────────────────────────────────────────────────────
 node_modules/
@@ -38,8 +47,16 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# ─── Editor ─────────────────────────────────────────────────────────
+# ─── Editor / Tools ──────────────────────────────────────────────────
 .vscode/settings.json
 .idea/
+.claude/settings.local.json
 *.swp
 *.swo
+
+# Others
+notes.txt
+
+# Sounds
+SaveTikio Part 1.mp3
+talking-ben-saying-ben.mp3

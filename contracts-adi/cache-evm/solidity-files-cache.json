@@ -1,0 +1,80 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\Utilisateur\\Documents\\1- Alexandre\\Coding\\ETHDenver\\agentfi\\contracts-adi\\contracts\\ADIAgentPayments.sol": {
+      "lastModificationDate": 1771576947937,
+      "contentHash": "414c31235998fd717832148203610345",
+      "sourceName": "contracts/ADIAgentPayments.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ADIAgentPayments"
+      ]
+    },
+    "C:\\Users\\Utilisateur\\Documents\\1- Alexandre\\Coding\\ETHDenver\\agentfi\\contracts-adi\\contracts\\AgentFiPaymaster.sol": {
+      "lastModificationDate": 1771576971777,
+      "contentHash": "2a6b92c9968916c60b74ef468d4f7c71",
+      "sourceName": "contracts/AgentFiPaymaster.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "AgentFiPaymaster",
+        "IADIAgentPayments",
+        "IEntryPoint",
+        "IPaymaster"
+      ]
+    }
+  }
+}

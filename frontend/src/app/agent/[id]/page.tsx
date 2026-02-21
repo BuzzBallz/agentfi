@@ -4,13 +4,16 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Space_Mono, DM_Sans } from "next/font/google";
 import { useAccount } from "wagmi";
-import { useAgentData, useIsAuthorized, useTokenImage } from "@/hooks/useAgentData";
+import { useAgentData, useIsAuthorized, useTokenImage, useTokenMetadata, useResolvedAgentId } from "@/hooks/useAgentData";
 import { useHireAgent } from "@/hooks/useHireAgent";
 import { useExecuteAgent } from "@/hooks/useExecuteAgent";
-import { TOKEN_TO_AGENT } from "@/lib/api";
+import { useADIPayment } from "@/hooks/useADIPayment";
+import { useAppMode } from "@/context/AppModeContext";
 import { PLATFORM_FEE_PCT } from "@/config/contracts";
 import { formatEther } from "viem";
+import { formatPrice, txExplorerUrl } from "@/lib/format";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import AgentReputation from "@/components/AgentReputation";
 import ADICompliance from "@/components/ADICompliance";
 
@@ -45,9 +48,11 @@ export default function AgentPage({ params }: { params: { id: string } }) {
     metadataHash,
     owner: ownerAddress,
     isLoading: dataLoading,
-    isError: dataError,
+    isError: _dataError,
   } = useAgentData(tokenId);
-  const { imageUrl } = useTokenImage(tokenURI);
+  const { imageUrl, fallbackSvg } = useTokenImage(tokenURI, tokenId);
+  const tokenMeta = useTokenMetadata(tokenURI);
+  const agentId = useResolvedAgentId(tokenId);
   const isAuthorized = useIsAuthorized(tokenId, address);
   const isOwner =
     address && ownerAddress
@@ -57,7 +62,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
   const {
     hireAgent,
     hireAsOwner,
-    isPending: txPending,
+    isPending: _txPending,
     isConfirming: txConfirming,
     isSuccess: txSuccess,
     hash: txHash,
@@ -71,30 +76,56 @@ export default function AgentPage({ params }: { params: { id: string } }) {
     hederaProof,
     afcReward,
     crossAgentReport,
+    complianceData,
     isLoading: agentLoading,
     error: agentError,
     reset: resetAgent,
   } = useExecuteAgent();
+
+  const { isCompliant, mode } = useAppMode();
+  const {
+    payForAgent: adiPay,
+    hash: adiHash,
+    isPending: _adiPending,
+    isConfirming: adiConfirming,
+    isSuccess: adiSuccess,
+    isError: adiError,
+    error: adiErrorMsg,
+    paymentId: adiPaymentId,
+    reset: resetADI,
+  } = useADIPayment();
 
   const [query, setQuery] = useState("");
   const [crossAgent, setCrossAgent] = useState(false);
   const [step, setStep] = useState<
     "idle" | "tx" | "confirming" | "executing" | "done"
   >("idle");
+  const [txErrorLocal, setTxErrorLocal] = useState<string | null>(null);
 
-  // Name from contract, with fallback
-  const agentName = dataLoading ? "Loading..." : (agentData?.name || FALLBACK_NAMES[tokenId] || `Agent #${tokenId}`);
+  // Name from contract → tokenURI metadata → static fallback
+  const agentName = dataLoading
+    ? "Loading..."
+    : (agentData?.name || tokenMeta?.name || FALLBACK_NAMES[tokenId] || `Agent #${tokenId}`);
+  const agentDescription = agentData?.description || tokenMeta?.description || null;
   const category = CATEGORY_MAP[tokenId] || "DeFi";
   const catColor = CATEGORY_COLORS[category] || CATEGORY_COLORS.DeFi;
-  const agentId = TOKEN_TO_AGENT[tokenId];
 
-  // Trigger agent execution after tx confirms
+  // Trigger agent execution after tx confirms (permissionless mode - 0G Chain)
+  // Accept step "tx" OR "confirming" to handle fast-confirming TXs (e.g. owner bypass)
   useEffect(() => {
-    if (txSuccess && step === "confirming" && query) {
+    if (txSuccess && (step === "confirming" || step === "tx") && query && !isCompliant) {
       setStep("executing");
       execute(tokenId, query, address, crossAgent);
     }
-  }, [txSuccess, step, query, tokenId, execute, crossAgent]);
+  }, [txSuccess, step, query, tokenId, execute, crossAgent, isCompliant, address]);
+
+  // Trigger agent execution after ADI payment confirms (compliant mode)
+  useEffect(() => {
+    if (adiSuccess && adiPaymentId !== null && (step === "confirming" || step === "tx") && query) {
+      setStep("executing");
+      execute(tokenId, query, address, crossAgent, adiPaymentId);
+    }
+  }, [adiSuccess, adiPaymentId, step, query, tokenId, execute, crossAgent, address]);
 
   // Mark done when agent result arrives
   useEffect(() => {
@@ -110,32 +141,44 @@ export default function AgentPage({ params }: { params: { id: string } }) {
     }
   }, [agentError, step]);
 
+  // Default price fallback (0.001 OG) when agentData is unavailable
+  const pricePerCall = agentData?.pricePerCall ?? BigInt(1000000000000000);
+
   const handleHireAndExecute = () => {
-    if (!query.trim() || !agentData) return;
+    if (!query.trim()) return;
+    setTxErrorLocal(null);
     setStep("tx");
-    if (isOwner) {
+    if (isCompliant) {
+      const priceADI = formatEther(pricePerCall);
+      adiPay(tokenId, priceADI);
+    } else if (isOwner) {
       hireAsOwner(tokenId);
     } else {
-      hireAgent(tokenId, agentData.pricePerCall);
+      hireAgent(tokenId, pricePerCall);
     }
   };
 
-  // Watch tx state transitions
+  // Watch tx state transitions (both 0G and ADI)
   useEffect(() => {
-    if (txPending && step === "tx") {
-      // waiting for user to sign
-    }
-    if (txConfirming && step === "tx") {
+    if ((txConfirming || adiConfirming) && step === "tx") {
       setStep("confirming");
     }
-  }, [txPending, txConfirming, step]);
+  }, [txConfirming, adiConfirming, step]);
 
-  // Handle tx error
+  // Handle tx error (both 0G and ADI) — capture error, reset wagmi, go idle
   useEffect(() => {
-    if (txError && (step === "tx" || step === "confirming")) {
+    if ((txError || adiError) && (step === "tx" || step === "confirming")) {
+      // Capture error message before resetting wagmi
+      const errObj = (txErrorMsg || adiErrorMsg) as any;
+      const msg = errObj?.shortMessage || errObj?.message || "Transaction rejected";
+      setTxErrorLocal(msg.slice(0, 250));
       setStep("idle");
+      // Reset wagmi state so next attempt starts fresh (avoids stale hash / "receipt not found")
+      if (txError) resetHire();
+      if (adiError) resetADI();
     }
-  }, [txError, step]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [txError, adiError, step]);
 
   const statusText = () => {
     switch (step) {
@@ -184,10 +227,6 @@ export default function AgentPage({ params }: { params: { id: string } }) {
         <div style={{ color: "#9A8060", fontSize: 14 }}>
           Loading agent data...
         </div>
-      ) : dataError ? (
-        <div style={{ color: "#C47A5A", fontSize: 14 }}>
-          Failed to load agent data from contract
-        </div>
       ) : (
         <>
           {/* SVG Image from tokenURI */}
@@ -209,6 +248,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                 src={imageUrl}
                 alt={`${agentName} iNFT`}
                 style={{ maxWidth: "100%", maxHeight: 280, objectFit: "contain" }}
+                onError={(e) => { if (fallbackSvg) (e.target as HTMLImageElement).src = fallbackSvg; }}
               />
             </div>
           )}
@@ -264,10 +304,10 @@ export default function AgentPage({ params }: { params: { id: string } }) {
             </span>
           </div>
 
-          {/* Description from contract */}
-          {agentData?.description && (
+          {/* Description from contract or tokenURI fallback */}
+          {agentDescription && (
             <div style={{ color: "#9A8060", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-              {agentData.description}
+              {agentDescription}
             </div>
           )}
 
@@ -297,10 +337,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                   className={spaceMono.className}
                   style={{ color: "#C9A84C", fontSize: 14, fontWeight: 700 }}
                 >
-                  {agentData
-                    ? formatEther(agentData.pricePerCall)
-                    : "---"}{" "}
-                  A0GI
+                  {formatPrice(pricePerCall, mode)}
                 </div>
                 <div style={{ color: "#5C4A32", fontSize: 11, marginTop: 4 }}>
                   97.5% to owner &middot; {PLATFORM_FEE_PCT} platform fee
@@ -444,8 +481,8 @@ export default function AgentPage({ params }: { params: { id: string } }) {
           {/* Agent Reputation — live AFC balance from Hedera */}
           <AgentReputation tokenId={tokenId} />
 
-          {/* ADI Chain Compliance — Mode B stats */}
-          <ADICompliance />
+          {/* ADI Chain Compliance — Mode B stats (only in compliant mode) */}
+          {isCompliant && <ADICompliance />}
 
           {/* Query input + Hire button */}
           <div
@@ -532,13 +569,15 @@ export default function AgentPage({ params }: { params: { id: string } }) {
               <button
                 onClick={handleHireAndExecute}
                 disabled={
-                  !query.trim() || step !== "idle" || !agentData
+                  !query.trim() || step !== "idle"
                 }
                 className={spaceMono.className}
                 style={{
                   background:
                     !query.trim() || step !== "idle"
                       ? "#5C4422"
+                      : isCompliant
+                      ? "#60A5FA"
                       : isOwner
                       ? "#7A9E6E"
                       : "#C9A84C",
@@ -557,27 +596,29 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                 }}
               >
                 {step === "idle"
-                  ? isOwner
+                  ? isOwner && !isCompliant
                     ? "Execute (Free) \u2192"
-                    : `Hire & Execute - ${agentData ? formatEther(agentData.pricePerCall) : "..."} A0GI \u2192`
+                    : isCompliant
+                    ? `Hire (Compliant) - ${formatPrice(pricePerCall, mode)} \u2192`
+                    : `Hire & Execute - ${formatPrice(pricePerCall, mode)} \u2192`
                   : statusText()}
               </button>
 
-              {txHash && (
+              {(txHash || adiHash) && (
                 <a
-                  href={`https://chainscan-galileo.0g.ai/tx/${txHash}`}
+                  href={txExplorerUrl((txHash || adiHash)!, mode)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={spaceMono.className}
-                  style={{ color: "#C9A84C", fontSize: 11, textDecoration: "underline" }}
+                  style={{ color: isCompliant ? "#60A5FA" : "#C9A84C", fontSize: 11, textDecoration: "underline" }}
                 >
-                  tx: {txHash.slice(0, 10)}...{txHash.slice(-6)}
+                  tx: {((txHash || adiHash)!).slice(0, 10)}...{((txHash || adiHash)!).slice(-6)}
                 </a>
               )}
             </div>
 
-            {/* Tx error */}
-            {txError && (
+            {/* Tx error — persistent local state so it survives wagmi reset */}
+            {txErrorLocal && step === "idle" && (
               <div
                 style={{
                   color: "#C47A5A",
@@ -585,10 +626,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                   marginTop: 12,
                 }}
               >
-                Transaction failed:{" "}
-                {(txErrorMsg as any)?.shortMessage ||
-                  (txErrorMsg as any)?.message ||
-                  "User rejected or error"}
+                Transaction failed: {txErrorLocal}
               </div>
             )}
           </div>
@@ -636,7 +674,8 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                       [&_h3]:text-lg [&_h3]:text-amber-300 [&_h3]:font-semibold [&_h3]:mb-2
                       [&_strong]:text-amber-200
                       [&_table]:w-full [&_th]:text-left [&_th]:text-amber-400 [&_th]:pb-2
-                      [&_td]:py-1 [&_td]:pr-4 [&_td]:text-neutral-300
+                      [&_td]:py-1 [&_td]:pr-4 [&_td]:text-neutral-300 [&_td]:border-b [&_td]:border-amber-900/20
+                      [&_th]:border-b [&_th]:border-amber-900/40
                       [&_li]:text-neutral-300 [&_p]:text-neutral-300 [&_p]:mb-3
                       [&_hr]:border-amber-900/30 [&_hr]:my-4
                       text-neutral-300 leading-relaxed"
@@ -649,7 +688,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                       overflowY: "auto",
                     }}
                   >
-                    <ReactMarkdown>{agentResult}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{agentResult}</ReactMarkdown>
                   </div>
 
                   {/* Hedera Proofs */}
@@ -782,14 +821,112 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                     </div>
                   )}
 
+                  {/* Compliance Verification Card (compliant mode) */}
+                  {(isCompliant || complianceData) && (
+                    <div
+                      style={{
+                        marginTop: 14,
+                        padding: 12,
+                        background: "rgba(96,165,250,0.08)",
+                        border: "1px solid rgba(96,165,250,0.2)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div
+                        className={spaceMono.className}
+                        style={{
+                          color: "#60A5FA",
+                          fontSize: 10,
+                          letterSpacing: "0.08em",
+                          marginBottom: 6,
+                        }}
+                      >
+                        COMPLIANCE VERIFICATION
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                        <span style={{ fontSize: 12 }}>&#x2705;</span>
+                        <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>KYC Verified</span>
+                      </div>
+
+                      {complianceData?.jurisdiction && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 12 }}>&#x2705;</span>
+                          <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>
+                            Jurisdiction: {complianceData.jurisdiction}
+                          </span>
+                        </div>
+                      )}
+
+                      {complianceData?.kyc_tier !== undefined && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 12 }}>&#x2705;</span>
+                          <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>
+                            KYC Tier: Enhanced ({complianceData.kyc_tier})
+                          </span>
+                        </div>
+                      )}
+
+                      {adiPaymentId !== null && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 12 }}>&#x2705;</span>
+                          <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>
+                            ADI Payment ID: #{adiPaymentId}
+                          </span>
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                        <span style={{ fontSize: 12 }}>&#x2705;</span>
+                        <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>
+                          FATF Travel Rule: Recorded
+                        </span>
+                      </div>
+
+                      {adiHash && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 12 }}>&#x2705;</span>
+                          <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>ADI Receipt:</span>
+                          <a
+                            href={txExplorerUrl(adiHash, "compliant")}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={spaceMono.className}
+                            style={{ color: "#60A5FA", fontSize: 11, textDecoration: "underline" }}
+                          >
+                            {adiHash.slice(0, 10)}...{adiHash.slice(-6)}
+                          </a>
+                        </div>
+                      )}
+
+                      {complianceData?.adi_receipt_tx && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 12 }}>&#x2705;</span>
+                          <span className={spaceMono.className} style={{ color: "#9A8060", fontSize: 11 }}>Execution Receipt:</span>
+                          <a
+                            href={txExplorerUrl(complianceData.adi_receipt_tx, "compliant")}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={spaceMono.className}
+                            style={{ color: "#60A5FA", fontSize: 11, textDecoration: "underline" }}
+                          >
+                            {complianceData.adi_receipt_tx.slice(0, 10)}...{complianceData.adi_receipt_tx.slice(-6)}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Reset button */}
                   <button
                     onClick={() => {
                       setStep("idle");
                       setQuery("");
                       setCrossAgent(false);
+                      setTxErrorLocal(null);
                       resetAgent();
                       resetHire();
+                      resetADI();
                     }}
                     className={spaceMono.className}
                     style={{

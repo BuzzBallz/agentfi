@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import AgentReputation from "./AgentReputation";
 
 interface AgentCardProps {
   id: number;
@@ -43,6 +46,10 @@ export default function AgentCard({
             {cap}
           </span>
         ))}
+      </div>
+      {/* Reputation badge — live AFC balance from Hedera Mirror Node */}
+      <div className="mb-4">
+        <AgentReputation tokenId={id} compact />
       </div>
       <div className="flex items-center justify-between">
         <span className="font-medium text-white">

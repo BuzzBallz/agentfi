@@ -30,9 +30,9 @@ TOKEN_ID_TO_AGENT_NAME = {v: k for k, v in AGENT_NAME_TO_TOKEN_ID.items()}
 
 # ─── Hedera accounts (fallback if registry read fails) ──
 AGENT_HEDERA_ACCOUNTS = {
-    0: os.getenv("AGENT_0_HEDERA_ACCOUNT", "0.0.7977799"),
-    1: os.getenv("AGENT_1_HEDERA_ACCOUNT", "0.0.7977811"),
-    2: os.getenv("AGENT_2_HEDERA_ACCOUNT", "0.0.7977819"),
+    0: os.getenv("AGENT_0_HEDERA_ACCOUNT", "0.0.7997780"),
+    1: os.getenv("AGENT_1_HEDERA_ACCOUNT", "0.0.7997785"),
+    2: os.getenv("AGENT_2_HEDERA_ACCOUNT", "0.0.7997786"),
 }
 
 OPERATOR_HEDERA_ACCOUNT = os.getenv("HEDERA_OPERATOR_ID", os.getenv("HEDERA_ACCOUNT_ID", ""))

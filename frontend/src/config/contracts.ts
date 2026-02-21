@@ -19,7 +19,9 @@ function getAddress(
 export const CONTRACT_ADDRESSES = {
   AgentNFT: getAddress(ogTestnet.id, "AgentNFT"),
   AgentMarketplace: getAddress(ogTestnet.id, "AgentMarketplace"),
+  AgentRegistry: getAddress(ogTestnet.id, "AgentRegistry"),
   AgentPayment: getAddress(adiTestnet.id, "AgentPayment"),
+  ADIAgentPayments: getAddress(adiTestnet.id, "ADIAgentPayments"),
 } as const;
 
 // Platform fee: 2.5% (250 basis points)

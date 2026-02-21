@@ -1,0 +1,57 @@
+[
+  {
+    "inputs": [{ "name": "serviceId", "type": "uint256" }],
+    "name": "payForAgentService",
+    "outputs": [{ "name": "paymentId", "type": "uint256" }],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "name": "paymentId", "type": "uint256" }],
+    "name": "getPaymentRecord",
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          { "name": "originator", "type": "address" },
+          { "name": "originatorJurisdiction", "type": "string" },
+          { "name": "originatorKYCTier", "type": "uint256" },
+          { "name": "beneficiary", "type": "address" },
+          { "name": "beneficiaryName", "type": "string" },
+          { "name": "amount", "type": "uint256" },
+          { "name": "timestamp", "type": "uint256" },
+          { "name": "agentServiceId", "type": "uint256" },
+          { "name": "agentName", "type": "string" },
+          { "name": "hederaTopicId", "type": "string" },
+          { "name": "executionHash", "type": "string" },
+          { "name": "purposeOfPayment", "type": "string" },
+          { "name": "status", "type": "uint8" }
+        ]
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "name": "", "type": "address" }],
+    "name": "kycVerified",
+    "outputs": [{ "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "name": "paymentId", "type": "uint256" },
+      { "indexed": true, "name": "originator", "type": "address" },
+      { "indexed": false, "name": "originatorJurisdiction", "type": "string" },
+      { "indexed": false, "name": "amount", "type": "uint256" },
+      { "indexed": true, "name": "agentServiceId", "type": "uint256" },
+      { "indexed": false, "name": "agentName", "type": "string" },
+      { "indexed": false, "name": "timestamp", "type": "uint256" }
+    ],
+    "name": "CompliancePayment",
+    "type": "event"
+  }
+]

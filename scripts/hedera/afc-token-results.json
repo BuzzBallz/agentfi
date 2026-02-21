@@ -1,0 +1,25 @@
+{
+  "tokenId": "0.0.7977623",
+  "name": "AgentFi Credits",
+  "symbol": "AFC",
+  "decimals": 2,
+  "initialSupply": 100000,
+  "explorer": "https://hashscan.io/testnet/token/0.0.7977623",
+  "agents": {
+    "portfolio_analyzer": {
+      "accountId": "0.0.7997780",
+      "initialBalance": "10.00 AFC",
+      "hashscan": "https://hashscan.io/testnet/account/0.0.7997780"
+    },
+    "yield_optimizer": {
+      "accountId": "0.0.7997785",
+      "initialBalance": "10.00 AFC",
+      "hashscan": "https://hashscan.io/testnet/account/0.0.7997785"
+    },
+    "risk_scorer": {
+      "accountId": "0.0.7997786",
+      "initialBalance": "10.00 AFC",
+      "hashscan": "https://hashscan.io/testnet/account/0.0.7997786"
+    }
+  }
+}

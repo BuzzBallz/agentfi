@@ -19,12 +19,69 @@ from pydantic import BaseModel  # noqa: E402
 from agents.orchestrator import AGENT_REGISTRY, AgentOrchestrator, HEDERA_ENABLED  # noqa: E402
 from agents.payments.mock_provider import MockPaymentProvider  # noqa: E402
 from agent_factory import run_agent  # noqa: E402
+from dynamic_registry import register_agent as registry_register, get_token_map, get_dynamic_agents, set_hedera_info, get_all_hedera_accounts, get_afc_balances  # noqa: E402
 
-from x402.config import AGENT_NAME_TO_TOKEN_ID, KITEAI_USDT_ADDRESS, get_registry_config  # noqa: E402
-from x402.server_middleware import x402_middleware_check, settle_x402_payment  # noqa: E402
-from x402.cross_agent_service import CrossAgentService  # noqa: E402
-from x402.afc_payment_service import AFCPaymentService, MockAFCPaymentService  # noqa: E402
-from adi.compliance_service import ADIComplianceService, MockADIComplianceService  # noqa: E402
+# Lazy imports: x402/adi depend on web3 which can hang on some platforms (Windows/MINGW).
+# Probe web3 in a subprocess first to avoid deadlocking the main process.
+# Set SKIP_WEB3=1 to skip the probe entirely (faster startup, safe for --reload).
+import subprocess, sys  # noqa: E401
+_X402_AVAILABLE = False
+try:
+    if os.getenv("SKIP_WEB3"):
+        raise ImportError("SKIP_WEB3 set — using mock fallbacks")
+    _probe = subprocess.run(
+        [sys.executable, "-c", "import web3"],
+        timeout=8, capture_output=True,
+    )
+    if _probe.returncode == 0:
+        from x402.config import AGENT_NAME_TO_TOKEN_ID, KITEAI_USDT_ADDRESS, get_registry_config  # noqa: E402
+        from x402.server_middleware import x402_middleware_check, settle_x402_payment  # noqa: E402
+        from x402.cross_agent_service import CrossAgentService  # noqa: E402
+        from x402.afc_payment_service import AFCPaymentService, MockAFCPaymentService  # noqa: E402
+        from adi.compliance_service import ADIComplianceService, MockADIComplianceService  # noqa: E402
+        _X402_AVAILABLE = True
+    else:
+        raise ImportError(f"web3 import returned {_probe.returncode}: {_probe.stderr.decode()[:200]}")
+except Exception as _e:
+    logging.getLogger(__name__).warning(f"x402/adi modules unavailable (web3 issue): {_e}")
+    _X402_AVAILABLE = False
+
+    # Mock fallbacks so the server can start without x402/adi
+    AGENT_NAME_TO_TOKEN_ID: dict[str, int] = {"portfolio_analyzer": 0, "yield_optimizer": 1, "risk_scorer": 2}
+    KITEAI_USDT_ADDRESS = ""
+
+    def get_registry_config(token_id: int) -> dict:
+        return {"x402_enabled": False, "price_afc": 0, "price_usdt": 0, "max_budget_afc": 0, "allow_cross_agent": False,
+                "agent_hedera_account": "", "owner_hedera_account": ""}
+
+    async def x402_middleware_check(request: Any, agent_id: str, wallet: str | None) -> None:
+        return None
+
+    async def settle_x402_payment(payment_data: Any) -> None:
+        return None
+
+    class CrossAgentService:
+        def __init__(self, **kwargs: Any): pass
+        async def execute_with_cross_agent(self, **kwargs: Any) -> dict:
+            return {"enhanced_result": kwargs.get("main_result", ""), "cross_agent_report": [], "x402_payments": []}
+
+    class AFCPaymentService:
+        pass
+
+    class MockAFCPaymentService:
+        pass
+
+    class ADIComplianceService:
+        def __init__(self): self.enabled = False
+        async def verify_kyc(self, *a: Any, **kw: Any) -> dict: return {"verified": False}
+        async def record_payment(self, *a: Any, **kw: Any) -> dict: return {}
+        async def check_compliance(self, *a: Any, **kw: Any) -> dict: return {"compliant": True}
+
+    class MockADIComplianceService:
+        def __init__(self): self.enabled = False
+        async def verify_kyc(self, *a: Any, **kw: Any) -> dict: return {"verified": True, "kyc_tier": 2, "jurisdiction": "US"}
+        async def record_payment(self, *a: Any, **kw: Any) -> dict: return {"tx_hash": "0xmock", "status": "recorded"}
+        async def check_compliance(self, *a: Any, **kw: Any) -> dict: return {"compliant": True}
 
 logging.basicConfig(
     level=logging.INFO,
@@ -112,12 +169,23 @@ async def list_agents() -> AgentResponse:
 
 
 async def _execute_with_fallback(agent_id: str, query: str, wallet_address: str | None) -> str:
-    """Try new LangChain agent first, fall back to legacy agent."""
+    """Try new LangChain agent first, fall back to legacy agent.
+
+    Dynamic agents (user-created via /agents/register) skip the LangChain
+    tool chain and execute directly via their own system prompt + Claude.
+    """
+    from agents.dynamic_agent import DynamicAgent
+
+    agent = AGENT_REGISTRY.get(agent_id)
+    # Dynamic agents have their own system prompt — execute directly (fast, no tools)
+    if isinstance(agent, DynamicAgent):
+        return await agent.execute(query, wallet_address=wallet_address)
+
+    # Static agents use the full LangChain ReAct agent with Hedera/DeFi tools
     try:
         return await run_agent(agent_id, query, wallet_address)
     except Exception as e:
         logger.warning(f"LangChain agent failed, falling back to legacy: {e}")
-        agent = AGENT_REGISTRY.get(agent_id)
         if agent:
             return await agent.execute(query, wallet_address=wallet_address)
         raise
@@ -272,6 +340,76 @@ async def payment_status() -> AgentResponse:
     )
 
 
+# ── Dynamic agent endpoints ────────────────────────────────────────
+
+
+class RegisterAgentRequest(BaseModel):
+    agent_id: str
+    name: str
+    description: str
+    system_prompt: str
+    token_id: int
+    price_per_call: float = 0.001
+
+
+@app.post("/agents/register")
+async def register_dynamic_agent(body: RegisterAgentRequest) -> AgentResponse:
+    """Register a new dynamic agent (called after on-chain mint)."""
+    # If agent_id already exists, try with token_id suffix to avoid collision
+    agent_id = body.agent_id
+    if agent_id in AGENT_REGISTRY:
+        agent_id = f"{body.agent_id}_t{body.token_id}"
+    if agent_id in AGENT_REGISTRY:
+        return AgentResponse(success=False, data=None, error=f"Agent '{agent_id}' already exists")
+
+    try:
+        agent = registry_register(
+            agent_id=agent_id,
+            name=body.name,
+            description=body.description,
+            system_prompt=body.system_prompt,
+            token_id=body.token_id,
+            price_per_call=body.price_per_call,
+        )
+        # Add to the live orchestrator registry so it's immediately executable
+        AGENT_REGISTRY[agent_id] = agent
+
+        # Auto-register on Hedera (create topics) in background — don't block the response
+        if HEDERA_ENABLED:
+            import threading
+
+            def _register_hedera() -> None:
+                try:
+                    from hedera.register_dynamic import register_agent_on_hedera
+                    hedera_data = register_agent_on_hedera(agent_id, body.name)
+                    if hedera_data and hedera_data.get("inbound"):
+                        set_hedera_info(agent_id, hedera_data)
+                        logger.info(f"Hedera registration for {agent_id}: {hedera_data}")
+                except Exception as he:
+                    logger.warning(f"Hedera registration failed for {agent_id} (non-blocking): {he}")
+
+            threading.Thread(target=_register_hedera, daemon=True).start()
+
+        return AgentResponse(
+            success=True,
+            data={
+                "agent_id": agent_id,
+                "token_id": body.token_id,
+            },
+            error=None,
+        )
+    except ValueError as e:
+        return AgentResponse(success=False, data=None, error=str(e))
+
+
+@app.get("/agents/token-map")
+async def token_map() -> AgentResponse:
+    """Returns full tokenId -> agent_id mapping (static + dynamic)."""
+    tmap = get_token_map()
+    # JSON keys must be strings
+    return AgentResponse(success=True, data={str(k): v for k, v in tmap.items()}, error=None)
+
+
 # ── x402 endpoints ─────────────────────────────────────────────────
 
 
@@ -365,6 +503,28 @@ async def get_agent_topics_endpoint(agent_id: str) -> AgentResponse:
             "inbound_explorer": f"https://hashscan.io/testnet/topic/{topics['inbound']}",
             "outbound_explorer": f"https://hashscan.io/testnet/topic/{topics['outbound']}",
         },
+        error=None,
+    )
+
+
+@app.get("/hedera/accounts")
+async def hedera_accounts() -> AgentResponse:
+    """Return tokenId -> Hedera account mapping for all agents (static + dynamic)."""
+    accounts = get_all_hedera_accounts()
+    return AgentResponse(
+        success=True,
+        data={str(k): v for k, v in accounts.items()},
+        error=None,
+    )
+
+
+@app.get("/hedera/afc-balances")
+async def hedera_afc_balances() -> AgentResponse:
+    """Return tokenId -> tracked AFC balance for dynamic agents."""
+    balances = get_afc_balances()
+    return AgentResponse(
+        success=True,
+        data={str(k): v for k, v in balances.items()},
         error=None,
     )
 

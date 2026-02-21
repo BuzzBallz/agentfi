@@ -6,7 +6,7 @@ export function useHireAgent() {
   const { writeContract, data: hash, isPending, isError, error, reset } =
     useWriteContract();
 
-  const { isLoading: isConfirming, isSuccess } =
+  const { isLoading: isConfirming, isSuccess, isError: receiptError, error: receiptErrorMsg } =
     useWaitForTransactionReceipt({ hash });
 
   const hireAgent = (tokenId: number, priceInWei: bigint) => {
@@ -32,5 +32,15 @@ export function useHireAgent() {
     });
   };
 
-  return { hireAgent, hireAsOwner, isPending, isConfirming, isSuccess, hash, isError, error, reset };
+  return {
+    hireAgent,
+    hireAsOwner,
+    isPending,
+    isConfirming,
+    isSuccess,
+    hash,
+    isError: isError || receiptError,
+    error: error || receiptErrorMsg,
+    reset,
+  };
 }

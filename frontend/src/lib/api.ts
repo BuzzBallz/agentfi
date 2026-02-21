@@ -1,11 +1,37 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// Map on-chain tokenId to backend agent_id
-const TOKEN_TO_AGENT: Record<number, string> = {
+// Static fallback for the 3 seeded agents
+const STATIC_TOKEN_MAP: Record<number, string> = {
   0: "portfolio_analyzer",
   1: "yield_optimizer",
   2: "risk_scorer",
 };
+
+// Dynamic map fetched from backend (includes static + user-created agents)
+let dynamicTokenMap: Record<number, string> | null = null;
+
+export async function refreshTokenMap(): Promise<void> {
+  try {
+    const res = await fetch(`${API_BASE}/agents/token-map`);
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json.success && json.data) {
+      dynamicTokenMap = {};
+      for (const [k, v] of Object.entries(json.data)) {
+        dynamicTokenMap[Number(k)] = v as string;
+      }
+    }
+  } catch {
+    // Non-fatal — fall back to static map
+  }
+}
+
+export function resolveAgentId(tokenId: number): string | undefined {
+  return dynamicTokenMap?.[tokenId] ?? STATIC_TOKEN_MAP[tokenId];
+}
+
+// Kept for backwards compat with imports
+const TOKEN_TO_AGENT = STATIC_TOKEN_MAP;
 
 export async function executeAgent(
   tokenId: number,
@@ -13,7 +39,13 @@ export async function executeAgent(
   walletAddress?: string,
   crossAgent?: boolean,
 ) {
-  const agentId = TOKEN_TO_AGENT[tokenId];
+  let agentId = resolveAgentId(tokenId);
+
+  // If not found, try refreshing the map (handles just-minted agents)
+  if (!agentId) {
+    await refreshTokenMap();
+    agentId = resolveAgentId(tokenId);
+  }
   if (!agentId) throw new Error(`Unknown tokenId: ${tokenId}`);
 
   const body: Record<string, unknown> = { query };
@@ -35,7 +67,11 @@ export async function executeAgent(
 }
 
 export async function getAgentX402Info(tokenId: number) {
-  const agentId = TOKEN_TO_AGENT[tokenId];
+  let agentId = resolveAgentId(tokenId);
+  if (!agentId) {
+    await refreshTokenMap();
+    agentId = resolveAgentId(tokenId);
+  }
   if (!agentId) throw new Error(`Unknown tokenId: ${tokenId}`);
 
   const res = await fetch(`${API_BASE}/agents/${agentId}/x402`);
@@ -65,6 +101,43 @@ export async function getHederaStatus() {
   return res.json();
 }
 
+// ── Dynamic agent registration ──────────────────────────────────
+
+export interface RegisterAgentBody {
+  agent_id: string;
+  name: string;
+  description: string;
+  system_prompt: string;
+  token_id: number;
+  price_per_call: number;
+}
+
+export async function registerAgent(body: RegisterAgentBody) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    const res = await fetch(`${API_BASE}/agents/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    const json = await res.json();
+    if (json.success) {
+      await refreshTokenMap();
+    }
+    return json;
+  } catch (e: unknown) {
+    clearTimeout(timeout);
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new Error("Backend registration timed out (server may be restarting)");
+    }
+    throw e;
+  }
+}
+
 // ── ADI Compliance endpoints ─────────────────────────────────────
 
 export async function executeAgentCompliant(
@@ -74,7 +147,11 @@ export async function executeAgentCompliant(
   adiPaymentId: number,
   crossAgent?: boolean,
 ) {
-  const agentId = TOKEN_TO_AGENT[tokenId];
+  let agentId = resolveAgentId(tokenId);
+  if (!agentId) {
+    await refreshTokenMap();
+    agentId = resolveAgentId(tokenId);
+  }
   if (!agentId) throw new Error(`Unknown tokenId: ${tokenId}`);
 
   const res = await fetch(`${API_BASE}/agents/${agentId}/execute-compliant`, {

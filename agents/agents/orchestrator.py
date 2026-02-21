@@ -25,6 +25,10 @@ AGENT_REGISTRY: dict[str, BaseAgent] = {
     "risk_scorer": RiskScorerAgent(),
 }
 
+# Merge dynamic agents from disk
+from dynamic_registry import load_dynamic_agents
+AGENT_REGISTRY.update(load_dynamic_agents())
+
 ROUTER_PROMPT = """
 You are an agent orchestrator. Given a user query, return a JSON execution plan.
 Available agents: portfolio_analyzer, yield_optimizer, risk_scorer.

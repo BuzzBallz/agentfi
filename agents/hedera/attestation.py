@@ -19,15 +19,33 @@ _AGENT_ENV_PREFIX = {
 
 
 def get_agent_topics(agent_name: str) -> dict[str, str]:
-    """Return inbound/outbound topic IDs for a registered agent."""
+    """Return inbound/outbound topic IDs for a registered agent.
+
+    Checks static env vars first, then falls back to the dynamic registry
+    (for user-created agents registered at runtime).
+    """
     prefix = _AGENT_ENV_PREFIX.get(agent_name, "")
-    if not prefix:
-        return {}
-    return {
-        "account": os.environ.get(f"{prefix}_ACCOUNT", ""),
-        "inbound": os.environ.get(f"{prefix}_INBOUND_TOPIC", ""),
-        "outbound": os.environ.get(f"{prefix}_OUTBOUND_TOPIC", ""),
-    }
+    if prefix:
+        return {
+            "account": os.environ.get(f"{prefix}_ACCOUNT", ""),
+            "inbound": os.environ.get(f"{prefix}_INBOUND_TOPIC", ""),
+            "outbound": os.environ.get(f"{prefix}_OUTBOUND_TOPIC", ""),
+        }
+
+    # Fall back to dynamic registry
+    try:
+        from dynamic_registry import get_hedera_info
+        info = get_hedera_info(agent_name)
+        if info:
+            return {
+                "account": info.get("account", ""),
+                "inbound": info.get("inbound", ""),
+                "outbound": info.get("outbound", ""),
+            }
+    except Exception:
+        pass
+
+    return {}
 
 
 async def attest_execution(agent_name: str, query: str, result: str) -> dict:

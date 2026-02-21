@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import dynamic from "next/dynamic"
-import { Providers } from "@/components/Providers"
 import { SidebarProvider } from "@/components/ui/sidebar"
 
+const Providers = dynamic(
+  () => import("@/components/Providers").then((m) => ({ default: m.Providers })),
+  { ssr: false }
+)
 const AppSidebar = dynamic(() => import("@/components/AppSidebar"), { ssr: false })
 const TopBar = dynamic(() => import("@/components/TopBar"), { ssr: false })
 const DotGrid = dynamic(() => import("@/components/DotGrid"), { ssr: false })
@@ -16,7 +19,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, padding: 0, background: "#1A1208", minHeight: "100vh" }}>
+      <body suppressHydrationWarning style={{ margin: 0, padding: 0, background: "#1A1208", minHeight: "100vh" }}>
         <DotGrid
           dotSize={4}
           gap={28}

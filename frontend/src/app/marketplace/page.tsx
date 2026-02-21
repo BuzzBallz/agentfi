@@ -7,6 +7,7 @@ import { formatEther } from "viem"
 import PixelTransition from "@/components/PixelTransition"
 import { useListedAgents } from "@/hooks/useListedAgents"
 import { useAgentData } from "@/hooks/useAgentData"
+import { useAppMode } from "@/context/AppModeContext"
 import { PLATFORM_FEE_PCT } from "@/config/contracts"
 
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] })
@@ -34,6 +35,12 @@ const TOKEN_CATEGORY: Record<number, Category> = {
   2: "Risk",
 }
 
+const FALLBACK_NAMES: Record<number, string> = {
+  0: "Portfolio Analyzer",
+  1: "Yield Optimizer",
+  2: "Risk Scorer",
+}
+
 // Mock agents for visual richness (not on-chain)
 const MOCK_AGENTS = [
   { name: "Cross-Chain Arbitrage", category: "DeFi" as Category, desc: "Identifies arbitrage opportunities across 0G, ADI, and EVM chains", price: "0.015" },
@@ -50,9 +57,10 @@ function OnChainAgentCard({ tokenId, listing }: {
 }) {
   const router = useRouter()
   const { agentData, isLoading } = useAgentData(tokenId)
+  const { currencySymbol, isCompliant } = useAppMode()
 
   // Name + description from contract
-  const name = agentData?.name || `Agent #${tokenId}`
+  const name = isLoading ? "Loading..." : (agentData?.name || FALLBACK_NAMES[tokenId] || `Agent #${tokenId}`)
   const category = TOKEN_CATEGORY[tokenId] || "DeFi"
   const desc = agentData?.description || "AI agent on-chain"
 
@@ -125,6 +133,25 @@ function OnChainAgentCard({ tokenId, listing }: {
       >
         ERC-7857 iNFT
       </span>
+      {isCompliant && (
+        <span
+          className={spaceMono.className}
+          style={{
+            background: "rgba(96,165,250,0.1)",
+            color: "#60A5FA",
+            fontSize: 9,
+            letterSpacing: "0.05em",
+            padding: "2px 8px",
+            borderRadius: 999,
+            fontWeight: 700,
+            display: "inline-block",
+            marginBottom: 10,
+            marginLeft: 6,
+          }}
+        >
+          FATF Compliant
+        </span>
+      )}
 
       {/* Description from contract */}
       <div style={{
@@ -169,7 +196,7 @@ function OnChainAgentCard({ tokenId, listing }: {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <span className={spaceMono.className} style={{ color: "#F5ECD7", fontSize: 13 }}>
-            {formatEther(listing.pricePerHire)} A0GI
+            {formatEther(listing.pricePerHire)} {currencySymbol}
           </span>
           <div style={{ color: "#5C4A32", fontSize: 9, marginTop: 2 }}>
             {PLATFORM_FEE_PCT} platform fee
@@ -291,6 +318,7 @@ export default function MarketplacePage() {
   const [activeFilter, setActiveFilter] = useState<Category>("All")
   const [search, setSearch] = useState("")
   const { agents: listedAgents, isLoading, isError } = useListedAgents()
+  const { currencySymbol } = useAppMode()
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -324,7 +352,7 @@ export default function MarketplacePage() {
           Agent Marketplace
         </h1>
         <p style={{ color: "#9A8060", fontSize: 14, marginTop: 6 }}>
-          Hire specialized AI agents. Pay with A0GI. Own as ERC-7857 iNFT.
+          Hire specialized AI agents. Pay with {currencySymbol}. Own as ERC-7857 iNFT.
         </p>
       </div>
 

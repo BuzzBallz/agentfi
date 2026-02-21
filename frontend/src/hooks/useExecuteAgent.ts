@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { executeAgent } from "@/lib/api";
+import { executeAgent, executeAgentCompliant } from "@/lib/api";
 
 export function useExecuteAgent() {
   const [result, setResult] = useState<string | null>(null);
   const [hederaProof, setHederaProof] = useState<any>(null);
   const [afcReward, setAfcReward] = useState<any>(null);
   const [crossAgentReport, setCrossAgentReport] = useState<any>(null);
+  const [complianceData, setComplianceData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,6 +15,7 @@ export function useExecuteAgent() {
     query: string,
     walletAddress?: string,
     crossAgent?: boolean,
+    adiPaymentId?: number,
   ) => {
     setIsLoading(true);
     setError(null);
@@ -21,8 +23,11 @@ export function useExecuteAgent() {
     setHederaProof(null);
     setAfcReward(null);
     setCrossAgentReport(null);
+    setComplianceData(null);
     try {
-      const res = await executeAgent(tokenId, query, walletAddress, crossAgent);
+      const res = adiPaymentId !== undefined
+        ? await executeAgentCompliant(tokenId, query, walletAddress!, adiPaymentId, crossAgent)
+        : await executeAgent(tokenId, query, walletAddress, crossAgent);
       if (res.success) {
         // Backend returns { data: { result: "...", hedera_proof: {...}, afc_reward: {...}, cross_agent: {...} } }
         // or { data: "plain string" } for simple responses
@@ -41,6 +46,10 @@ export function useExecuteAgent() {
         if (res.afc_reward) {
           setAfcReward(res.afc_reward);
         }
+        // Compliance data from compliant execution
+        if (res.compliance || res.data?.compliance) {
+          setComplianceData(res.compliance || res.data?.compliance);
+        }
       } else {
         setError(res.error || "Agent execution failed");
       }
@@ -56,9 +65,10 @@ export function useExecuteAgent() {
     setHederaProof(null);
     setAfcReward(null);
     setCrossAgentReport(null);
+    setComplianceData(null);
     setIsLoading(false);
     setError(null);
   };
 
-  return { execute, result, hederaProof, afcReward, crossAgentReport, isLoading, error, reset };
+  return { execute, result, hederaProof, afcReward, crossAgentReport, complianceData, isLoading, error, reset };
 }

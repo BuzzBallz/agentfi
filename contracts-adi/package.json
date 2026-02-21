@@ -1,0 +1,23 @@
+{
+  "name": "agentfi-contracts-adi",
+  "version": "1.0.0",
+  "description": "AgentFi compliance contracts for ADI Chain (zkSync-based)",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat deploy-zksync --script deploy-all.ts"
+  },
+  "devDependencies": {
+    "@matterlabs/hardhat-zksync": "^1.2.0",
+    "@matterlabs/hardhat-zksync-deploy": "^1.5.0",
+    "@matterlabs/hardhat-zksync-solc": "^1.5.1",
+    "@matterlabs/hardhat-zksync-verify": "^1.6.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "dotenv": "^16.4.0",
+    "ethers": "^6.0.0",
+    "hardhat": "^2.22.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.3.0",
+    "zksync-ethers": "^6.0.0"
+  }
+}

@@ -187,17 +187,29 @@ class RiskScorerAgent(BaseAgent):
 
             portfolio_lines = [f"- {token}: {pct}%" for token, pct in portfolio.items()]
 
-            wallet_context = ""
+            wallet_banner = ""
+            holdings_line = ""
             if wallet_address:
                 balances = await get_wallet_balances(wallet_address)
-                wallet_context = f"""
-
-CONNECTED WALLET: {wallet_address}
-WALLET DATA: {json.dumps(balances, indent=2)}
-The user is connected with this wallet. Reference their address and real balance in your risk assessment."""
+                native = balances.get("native_balance", {})
+                bal_amount = native.get("balance", 0)
+                bal_symbol = native.get("symbol", "OG")
+                chain_name = balances.get("chain", "0G-Galileo-Testnet")
+                wallet_banner = (
+                    f"## Connected Wallet\n"
+                    f"- **Address:** `{wallet_address}`\n"
+                    f"- **Balance:** {bal_amount} {bal_symbol} on {chain_name}\n\n"
+                    f"---\n\n"
+                )
+                holdings_line = (
+                    f"I hold {bal_amount} {bal_symbol} (0G Chain native gas token) on {chain_name}. "
+                    f"That is 100% of my on-chain portfolio. "
+                )
 
             system_prompt = f"""You are a DeFi risk analyst. A risk score has ALREADY been computed from real data.
 Your job is to EXPLAIN the score — do NOT change it.
+
+IMPORTANT: NEVER ask the user for more information. Always analyze with whatever data is provided.
 
 PORTFOLIO:
 {chr(10).join(portfolio_lines)}
@@ -216,8 +228,6 @@ SCORE BREAKDOWN:
 - Stablecoin exposure sub-score: {breakdown['stablecoin_exposure']}/2 (stablecoin allocation: {breakdown['stablecoin_pct']}%)
 - 24h Drawdown sub-score: {breakdown['drawdown_24h']}/2 (weighted 24h change: {breakdown['weighted_24h_change_pct']}%)
 
-{wallet_context}
-
 RULES:
 1. Report the score as {total_score}/10 — do not change it
 2. Explain each sub-score using the real numbers above
@@ -225,16 +235,19 @@ RULES:
 4. Provide 2-3 actionable suggestions to reduce risk
 5. Keep the response structured and concise"""
 
+            user_message = holdings_line + query
+
             client = AsyncAnthropic()
             response = await client.messages.create(
                 model="claude-haiku-4-5-20251001",
                 max_tokens=600,
                 system=system_prompt,
                 messages=[
-                    {"role": "user", "content": query},
+                    {"role": "user", "content": user_message},
                 ],
             )
-            return response.content[0].text or ""
+            llm_result = response.content[0].text or ""
+            return wallet_banner + llm_result
         except Exception as e:
             logger.error(f"Risk scorer error: {e}")
             return f"Risk scoring error: {str(e)}"

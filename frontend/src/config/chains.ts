@@ -1,10 +1,12 @@
 import { defineChain } from "viem";
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { http, createConfig } from "wagmi";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
+import { injectedWallet, metaMaskWallet } from "@rainbow-me/rainbowkit/wallets";
 
 export const ogTestnet = defineChain({
   id: 16602,
   name: "0G-Galileo-Testnet",
-  nativeCurrency: { name: "A0GI", symbol: "A0GI", decimals: 18 },
+  nativeCurrency: { name: "OG", symbol: "OG", decimals: 18 },
   rpcUrls: {
     default: {
       http: [
@@ -42,10 +44,17 @@ export const adiTestnet = defineChain({
   testnet: true,
 });
 
-export const wagmiConfig = getDefaultConfig({
-  appName: "AgentFi",
-  projectId:
-    process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "agentfi-dev",
+const connectors = connectorsForWallets(
+  [{ groupName: "Wallets", wallets: [injectedWallet, metaMaskWallet] }],
+  { appName: "AgentFi", projectId: "00000000000000000000000000000000" }
+);
+
+export const wagmiConfig = createConfig({
+  connectors,
   chains: [ogTestnet, adiTestnet],
+  transports: {
+    [ogTestnet.id]: http(process.env.NEXT_PUBLIC_OG_RPC ?? "https://evmrpc-testnet.0g.ai"),
+    [adiTestnet.id]: http(process.env.NEXT_PUBLIC_ADI_RPC ?? "https://rpc.ab.testnet.adifoundation.ai/"),
+  },
   ssr: true,
 });

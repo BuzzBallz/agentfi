@@ -80,7 +80,7 @@ contract AgentNFTv2 is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, IERC7
     //  Minting
     // ---------------------------------------------------------------
 
-    /// @notice Mint a new iNFT agent
+    /// @notice Mint a new iNFT agent (owner only, can mint to any address)
     function mint(
         address to,
         string calldata uri,
@@ -102,6 +102,28 @@ contract AgentNFTv2 is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, IERC7
         _authGeneration[tokenId] = 1;
 
         emit AgentMinted(tokenId, to);
+    }
+
+    /// @notice Public mint — anyone can create an agent iNFT (minted to msg.sender)
+    function publicMint(
+        string calldata uri,
+        AgentMetadata calldata metadata,
+        bytes32 metadataHash,
+        string calldata encryptedURI,
+        bytes calldata sealedKey
+    ) external returns (uint256 tokenId) {
+        tokenId = _nextTokenId++;
+        _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, uri);
+
+        agentData[tokenId] = metadata;
+        _metadataHashes[tokenId] = metadataHash;
+        _encryptedURIs[tokenId] = encryptedURI;
+        _sealedKeys[tokenId] = sealedKey;
+
+        _authGeneration[tokenId] = 1;
+
+        emit AgentMinted(tokenId, msg.sender);
     }
 
     // ---------------------------------------------------------------
