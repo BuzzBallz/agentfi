@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Space_Mono, DM_Sans } from "next/font/google"
 import { formatEther } from "viem"
@@ -11,13 +11,39 @@ import { useAppMode } from "@/context/AppModeContext"
 import { PLATFORM_FEE_PCT } from "@/config/contracts"
 import KYCGate from "@/components/KYCGate"
 import FadeContent from "@/components/FadeContent"
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox"
 
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] })
 const dmSans = DM_Sans({ subsets: ["latin"] })
 
-type Category = "All" | "DeFi" | "Risk" | "Yield"
+type Category = "All" | "DeFi" | "Risk" | "Yield" | "Arbitrage" | "Compliance" | "Custom"
 
-const CATEGORIES: Category[] = ["All", "DeFi", "Risk", "Yield"]
+const FILTER_CATEGORIES = [
+  { value: "all", label: "All Categories" },
+  { value: "defi", label: "DeFi" },
+  { value: "yield", label: "Yield" },
+  { value: "risk", label: "Risk" },
+  { value: "arbitrage", label: "Arbitrage" },
+  { value: "compliance", label: "Compliance" },
+  { value: "custom", label: "Custom" },
+]
+
+const VALUE_TO_CATEGORY: Record<string, Category> = {
+  all: "All",
+  defi: "DeFi",
+  yield: "Yield",
+  risk: "Risk",
+  arbitrage: "Arbitrage",
+  compliance: "Compliance",
+  custom: "Custom",
+}
 
 const CATEGORY_COLORS: Record<string, string> = {
   DeFi: "rgba(201,168,76,0.1)",
@@ -316,14 +342,31 @@ function MockAgentCard({ agent }: { agent: typeof MOCK_AGENTS[0] }) {
 
 /* -- Main page -- */
 export default function MarketplacePage() {
-  const [activeFilter, setActiveFilter] = useState<Category>("All")
+  const [filterValue, setFilterValue] = useState("All Categories")
+  const [filterOpen, setFilterOpen] = useState(false)
+  const filterRef = useRef<HTMLDivElement>(null)
   const [search, setSearch] = useState("")
   const { agents: listedAgents, isLoading, isError } = useListedAgents()
   const { currencySymbol } = useAppMode()
 
+  const activeFilter: Category = VALUE_TO_CATEGORY[
+    FILTER_CATEGORIES.find(c => c.label === filterValue)?.value ?? "all"
+  ] ?? "All"
+
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
+
+  // Close combobox on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (filterOpen && filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setFilterOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [filterOpen])
 
   // Filter on-chain agents by category and search
   // Category is derived from tokenId, name comes from agentData (loaded in card)
@@ -388,27 +431,50 @@ export default function MarketplacePage() {
             outline: "none",
           }}
         />
-        <div style={{ display: "flex", gap: 8 }}>
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveFilter(cat)}
-              className={spaceMono.className}
-              style={{
-                background: activeFilter === cat ? "#C9A84C" : "#1A1208",
-                color: activeFilter === cat ? "#1A1208" : "#9A8060",
-                border: activeFilter === cat ? "1px solid #C9A84C" : "1px solid #3D2E1A",
-                borderRadius: 999,
-                padding: "6px 16px",
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              {cat}
-            </button>
-          ))}
+        <div ref={filterRef} style={{ position: "relative", display: "inline-block" }}>
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={spaceMono.className}
+            style={{
+              minWidth: 180,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              background: "#1A1208", border: "1px solid #3D2E1A",
+              borderRadius: 8, padding: "10px 14px",
+              fontSize: 11,
+              color: "#9A8060", cursor: "pointer", gap: 8,
+            }}
+          >
+            <span>{filterValue}</span>
+            <span style={{ color: "#3D2E1A" }}>▾</span>
+          </button>
+
+          {filterOpen && (
+            <ComboboxContent>
+              <Combobox>
+                <ComboboxInput placeholder="Search category..." />
+                <ComboboxList>
+                  <ComboboxEmpty>No category found.</ComboboxEmpty>
+                  {FILTER_CATEGORIES.map((cat) => (
+                    <ComboboxItem
+                      key={cat.value}
+                      value={cat.value}
+                      onSelect={() => {
+                        setFilterValue(cat.label)
+                        setFilterOpen(false)
+                      }}
+                      style={{
+                        color: filterValue === cat.label ? "#C9A84C" : "#9A8060",
+                        background: filterValue === cat.label ? "rgba(201,168,76,0.08)" : "transparent",
+                      }}
+                    >
+                      {filterValue === cat.label && <span style={{ marginRight: 8, color: "#C9A84C" }}>✓</span>}
+                      {cat.label}
+                    </ComboboxItem>
+                  ))}
+                </ComboboxList>
+              </Combobox>
+            </ComboboxContent>
+          )}
         </div>
       </div>
 
