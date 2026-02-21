@@ -2,9 +2,12 @@
 import { useSidebar } from "@/components/ui/sidebar"
 import Link from "next/link"
 import WalletConnect from "./WalletConnect"
+import { useAppMode } from "@/context/AppModeContext"
 
 export default function TopBar() {
   const { open, setOpen } = useSidebar()
+  const { mode, setMode } = useAppMode()
+
   return (
     <div style={{
       position: "fixed", top: 0, left: 0, right: 0, height: 60, zIndex: 100,
@@ -41,8 +44,68 @@ export default function TopBar() {
         </span>
       </Link>
 
-      {/* Wallet — right side */}
-      <div style={{ marginLeft: "auto" }}>
+      {/* Right side: mode toggle + wallet */}
+      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Mode toggle */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          background: "#1A1208",
+          border: "1px solid #3D2E1A",
+          borderRadius: 8,
+          padding: "6px 8px",
+        }}>
+          <button
+            onClick={() => setMode("compliant")}
+            style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 9,
+              letterSpacing: "0.12em",
+              padding: "5px 12px",
+              borderRadius: 6,
+              border: "none",
+              cursor: "pointer",
+              background: mode === "compliant" ? "#C9A84C" : "transparent",
+              color: mode === "compliant" ? "#0D0802" : "#5C4422",
+              fontWeight: 700,
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            {mode === "compliant" && (
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#7A9E6E", flexShrink: 0 }} />
+            )}
+            COMPLIANT
+          </button>
+          <button
+            onClick={() => setMode("permissionless")}
+            style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 9,
+              letterSpacing: "0.12em",
+              padding: "5px 12px",
+              borderRadius: 6,
+              border: "none",
+              cursor: "pointer",
+              background: mode === "permissionless" ? "#C9A84C" : "transparent",
+              color: mode === "permissionless" ? "#0D0802" : "#5C4422",
+              fontWeight: 700,
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            {mode === "permissionless" && (
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#C9A84C", flexShrink: 0 }} />
+            )}
+            PERMISSIONLESS
+          </button>
+        </div>
+
         <WalletConnect />
       </div>
     </div>
