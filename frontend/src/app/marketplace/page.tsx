@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Space_Mono, DM_Sans } from "next/font/google"
-import { formatEther } from "viem"
 import PixelTransition from "@/components/PixelTransition"
 import { useListedAgents } from "@/hooks/useListedAgents"
 import { useAgentData } from "@/hooks/useAgentData"
@@ -74,13 +73,13 @@ const MOCK_AGENTS = [
 
 
 /* -- On-chain agent card (fetches metadata from contract) -- */
-function OnChainAgentCard({ tokenId, listing }: {
+function OnChainAgentCard({ tokenId }: {
   tokenId: number
   listing: { pricePerHire: bigint; priceDisplay: number }
 }) {
   const router = useRouter()
   const { agentData, isLoading } = useAgentData(tokenId)
-  const { currencySymbol, isCompliant } = useAppMode()
+  const { isCompliant } = useAppMode()
 
   // Name + description from contract
   const name = isLoading ? "Loading..." : (agentData?.name || FALLBACK_NAMES[tokenId] || `Agent #${tokenId}`)
