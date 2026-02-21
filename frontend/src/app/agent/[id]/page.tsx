@@ -16,6 +16,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import AgentReputation from "@/components/AgentReputation";
 import ADICompliance from "@/components/ADICompliance";
+import KYCGate from "@/components/KYCGate";
 
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
 const dmSans = DM_Sans({ subsets: ["latin"] });
@@ -92,6 +93,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
     isError: adiError,
     error: adiErrorMsg,
     paymentId: adiPaymentId,
+    paymentIdError: _adiPaymentIdError,
     reset: resetADI,
   } = useADIPayment();
 
@@ -144,12 +146,23 @@ export default function AgentPage({ params }: { params: { id: string } }) {
   // Default price fallback (0.001 OG) when agentData is unavailable
   const pricePerCall = agentData?.pricePerCall ?? BigInt(1000000000000000);
 
+  // ADI contract has its own prices (different from 0G marketplace)
+  const ADI_SERVICE_PRICES: Record<number, bigint> = {
+    0: BigInt("10000000000000000"),   // 0.01  ADI — portfolio_analyzer
+    1: BigInt("15000000000000000"),   // 0.015 ADI — yield_optimizer
+    2: BigInt("5000000000000000"),    // 0.005 ADI — risk_scorer
+  };
+  const displayPrice = isCompliant
+    ? (ADI_SERVICE_PRICES[tokenId] ?? BigInt("10000000000000000"))
+    : pricePerCall;
+
   const handleHireAndExecute = () => {
     if (!query.trim()) return;
     setTxErrorLocal(null);
     setStep("tx");
     if (isCompliant) {
-      const priceADI = formatEther(pricePerCall);
+      const adiPrice = ADI_SERVICE_PRICES[tokenId] ?? BigInt("10000000000000000");
+      const priceADI = formatEther(adiPrice);
       adiPay(tokenId, priceADI);
     } else if (isOwner) {
       hireAsOwner(tokenId);
@@ -201,6 +214,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
   };
 
   return (
+    <KYCGate>
     <div
       className={dmSans.className}
       style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px 80px" }}
@@ -337,7 +351,7 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                   className={spaceMono.className}
                   style={{ color: "#C9A84C", fontSize: 14, fontWeight: 700 }}
                 >
-                  {formatPrice(pricePerCall, mode)}
+                  {formatPrice(displayPrice, mode)}
                 </div>
                 <div style={{ color: "#5C4A32", fontSize: 11, marginTop: 4 }}>
                   97.5% to owner &middot; {PLATFORM_FEE_PCT} platform fee
@@ -599,8 +613,8 @@ export default function AgentPage({ params }: { params: { id: string } }) {
                   ? isOwner && !isCompliant
                     ? "Execute (Free) \u2192"
                     : isCompliant
-                    ? `Hire (Compliant) - ${formatPrice(pricePerCall, mode)} \u2192`
-                    : `Hire & Execute - ${formatPrice(pricePerCall, mode)} \u2192`
+                    ? `Hire (Compliant) - ${formatPrice(displayPrice, mode)} \u2192`
+                    : `Hire & Execute - ${formatPrice(displayPrice, mode)} \u2192`
                   : statusText()}
               </button>
 
@@ -949,5 +963,6 @@ export default function AgentPage({ params }: { params: { id: string } }) {
         </>
       )}
     </div>
+    </KYCGate>
   );
 }

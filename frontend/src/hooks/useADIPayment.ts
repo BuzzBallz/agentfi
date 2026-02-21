@@ -8,6 +8,7 @@ import { CONTRACT_ADDRESSES } from "@/config/contracts";
 export function useADIPayment() {
   const publicClient = usePublicClient();
   const [paymentId, setPaymentId] = useState<number | null>(null);
+  const [paymentIdError, setPaymentIdError] = useState<string | null>(null);
 
   const {
     writeContract,
@@ -24,6 +25,7 @@ export function useADIPayment() {
   const payForAgent = useCallback(
     (serviceId: number, priceADI: string) => {
       setPaymentId(null);
+      setPaymentIdError(null);
       writeContract({
         address: CONTRACT_ADDRESSES.ADIAgentPayments as `0x${string}`,
         abi: ADIAgentPaymentsAbi,
@@ -31,6 +33,7 @@ export function useADIPayment() {
         args: [BigInt(serviceId)],
         value: parseEther(priceADI),
         chainId: 99999,
+        gas: BigInt(500_000),
       });
     },
     [writeContract],
@@ -62,10 +65,12 @@ export function useADIPayment() {
             // not our event, skip
           }
         }
-        // fallback: use 0 if we can't parse logs (demo)
-        setPaymentId(0);
+        // Could not parse paymentId from logs — use paymentCount heuristic
+        setPaymentIdError("Could not extract paymentId from tx logs");
       })
-      .catch(() => setPaymentId(0));
+      .catch((err) => {
+        setPaymentIdError(`Receipt fetch failed: ${err?.message ?? err}`);
+      });
   }, [isSuccess, hash, publicClient]);
 
   return {
@@ -77,6 +82,7 @@ export function useADIPayment() {
     isError,
     error,
     paymentId,
+    paymentIdError,
     reset,
   };
 }

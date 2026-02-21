@@ -1,4 +1,4 @@
-import deployments from "../../../deployments.json";
+import deployments from "../../deployments.json";
 import { ogTestnet, adiTestnet } from "./chains";
 
 type DeploymentMap = typeof deployments;
