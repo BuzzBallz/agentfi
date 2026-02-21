@@ -23,15 +23,13 @@ import {
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] })
 const dmSans = DM_Sans({ subsets: ["latin"] })
 
-type Category = "All" | "DeFi" | "Risk" | "Yield" | "Arbitrage" | "Compliance" | "Custom"
+type Category = "All" | "DeFi" | "Risk" | "Yield" | "Custom"
 
 const FILTER_CATEGORIES = [
-  { value: "all", label: "All Categories" },
+  { value: "all", label: "All" },
   { value: "defi", label: "DeFi" },
   { value: "yield", label: "Yield" },
   { value: "risk", label: "Risk" },
-  { value: "arbitrage", label: "Arbitrage" },
-  { value: "compliance", label: "Compliance" },
   { value: "custom", label: "Custom" },
 ]
 
@@ -40,8 +38,6 @@ const VALUE_TO_CATEGORY: Record<string, Category> = {
   defi: "DeFi",
   yield: "Yield",
   risk: "Risk",
-  arbitrage: "Arbitrage",
-  compliance: "Compliance",
   custom: "Custom",
 }
 
@@ -342,7 +338,7 @@ function MockAgentCard({ agent }: { agent: typeof MOCK_AGENTS[0] }) {
 
 /* -- Main page -- */
 export default function MarketplacePage() {
-  const [filterValue, setFilterValue] = useState("All Categories")
+  const [filterValue, setFilterValue] = useState("All")
   const [filterOpen, setFilterOpen] = useState(false)
   const filterRef = useRef<HTMLDivElement>(null)
   const [search, setSearch] = useState("")
