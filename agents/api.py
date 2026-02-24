@@ -120,11 +120,19 @@ cross_agent_service = CrossAgentService(
 
 app = FastAPI(title="AgentFi API", version="0.2.0")
 
+_origins = [
+    "http://localhost:3000",
+    "https://agentfi-frontend.vercel.app",
+]
+if os.getenv("FRONTEND_URL"):
+    _origins.append(os.getenv("FRONTEND_URL"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_origins,
+    allow_origin_regex=r"https://agentfi.*\.vercel\.app",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
